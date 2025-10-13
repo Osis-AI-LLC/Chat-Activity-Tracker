@@ -53,11 +53,42 @@ interface ChatActivityTrackerProps {
 export default function ChatActivityTracker({ companyId }: ChatActivityTrackerProps) {
 	const [availableChats, setAvailableChats] = useState<ChatExperience[]>([]);
 	const [loadingChats, setLoadingChats] = useState(true);
+interface SavedChat {
+	id: string;
+	name: string;
+	expId: string;
+	date: string;
+	savedAt: string;
+}
+
+export default function ChatActivityTracker() {
 	const [chatExperienceId, setChatExperienceId] = useState("");
 	const [selectedDate, setSelectedDate] = useState("");
+	const [chatName, setChatName] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [activityData, setActivityData] = useState<ActivityData | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
+	const [saveSuccess, setSaveSuccess] = useState(false);
+
+	// Load saved chats from localStorage on mount
+	useEffect(() => {
+		const stored = localStorage.getItem("savedChats");
+		if (stored) {
+			try {
+				setSavedChats(JSON.parse(stored));
+			} catch (e) {
+				console.error("Failed to parse saved chats:", e);
+			}
+		}
+	}, []);
+
+	// Save to localStorage whenever savedChats changes
+	useEffect(() => {
+		if (savedChats.length > 0) {
+			localStorage.setItem("savedChats", JSON.stringify(savedChats));
+		}
+	}, [savedChats]);
 
 	// Fetch available chats when component mounts
 	useEffect(() => {
@@ -94,6 +125,7 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 		setLoading(true);
 		setError(null);
 		setActivityData(null);
+		setSaveSuccess(false);
 
 		try {
 			const response = await fetch(
@@ -111,6 +143,37 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 			setError(err instanceof Error ? err.message : "An error occurred");
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const saveChat = () => {
+		if (!chatExperienceId || !selectedDate) {
+			return;
+		}
+
+		const newSavedChat: SavedChat = {
+			id: `${chatExperienceId}-${selectedDate}-${Date.now()}`,
+			name: chatName || `Chat ${chatExperienceId} - ${selectedDate}`,
+			expId: chatExperienceId,
+			date: selectedDate,
+			savedAt: new Date().toISOString(),
+		};
+
+		setSavedChats((prev) => [newSavedChat, ...prev]);
+		setSaveSuccess(true);
+		setTimeout(() => setSaveSuccess(false), 3000);
+	};
+
+	const loadChat = (savedChat: SavedChat) => {
+		setChatExperienceId(savedChat.expId);
+		setSelectedDate(savedChat.date);
+		setChatName(savedChat.name);
+	};
+
+	const deleteChat = (chatId: string) => {
+		setSavedChats((prev) => prev.filter((chat) => chat.id !== chatId));
+		if (savedChats.length === 1) {
+			localStorage.removeItem("savedChats");
 		}
 	};
 
@@ -158,13 +221,26 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 					</Dialog.Root>
 				</div>
 
-				{/* Loading State */}
-				{loadingChats && (
-					<Card size="3">
-						<div className="flex items-center justify-center py-8">
-							<Spinner size="3" />
-							<Text size="3" className="ml-3" color="gray">
-								Loading available chats...
+
+				{/* Input Form */}
+				<Card size="3">
+					<div className="space-y-4">
+						<div>
+							<Text size="2" weight="medium" className="block mb-2" as="label">
+								Chat Name (Optional)
+							</Text>
+							<TextField.Root size="3" variant="surface">
+								<TextField.Input
+									placeholder="e.g., Main Community Chat"
+									value={chatName}
+									onChange={(e) => setChatName(e.target.value)}
+								/>
+							</TextField.Root>
+						</div>
+
+						<div>
+							<Text size="2" weight="medium" className="block mb-2" as="label">
+								Chat Experience ID
 							</Text>
 						</div>
 					</Card>
@@ -220,25 +296,43 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 							</TextField.Root>
 						</div>
 
-							<div className="pt-2">
-								<Button
-									onClick={fetchChatActivity}
-									disabled={loading || !chatExperienceId || !selectedDate}
-									size="2"
-									variant="soft"
-								>
-									{loading ? (
-										<span className="flex items-center gap-2">
-											<Spinner size="1" />
-											<span>Fetching...</span>
-										</span>
-									) : (
-										"Track Activity"
-									)}
-								</Button>
-							</div>
+						<div className="pt-2 flex gap-2">
+							<Button
+								onClick={fetchChatActivity}
+								disabled={loading || !chatExperienceId || !selectedDate}
+								size="2"
+								variant="soft"
+							>
+								{loading ? (
+									<span className="flex items-center gap-2">
+										<Spinner size="1" />
+										<span>Fetching...</span>
+									</span>
+								) : (
+									"Track Activity"
+								)}
+							</Button>
+						<Button
+							onClick={saveChat}
+							disabled={!chatExperienceId || !selectedDate}
+							size="2"
+							variant="surface"
+						>
+							Save Chat
+						</Button>
 						</div>
 					</Card>
+				)}
+
+				{/* Success Message */}
+				{saveSuccess && (
+					<Callout.Root color="green" size="2">
+						<Callout.Text>
+							<Text size="2" weight="medium">
+								✓ Chat saved successfully!
+							</Text>
+						</Callout.Text>
+					</Callout.Root>
 				)}
 
 				{/* Error Message */}
@@ -250,6 +344,56 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 							</Text>
 						</Callout.Text>
 					</Callout.Root>
+				)}
+
+				{/* Saved Chats */}
+				{savedChats.length > 0 && (
+					<Card size="3">
+						<Heading size="5" className="mb-4">
+							Saved Chats
+						</Heading>
+						<div className="space-y-2">
+							{savedChats.map((chat) => (
+								<Card key={chat.id} size="2" variant="surface">
+									<div className="flex justify-between items-start">
+										<div className="flex-1">
+											<Text size="3" weight="medium" className="block mb-1">
+												{chat.name}
+											</Text>
+											<Text size="2" color="gray" className="block mb-1">
+												Exp ID: {chat.expId}
+											</Text>
+											<div className="flex gap-3">
+												<Text size="1" color="gray">
+													Date: {chat.date}
+												</Text>
+												<Text size="1" color="gray">
+													Saved: {new Date(chat.savedAt).toLocaleDateString()}
+												</Text>
+											</div>
+										</div>
+										<div className="flex gap-2">
+											<Button
+												size="1"
+												variant="soft"
+												onClick={() => loadChat(chat)}
+											>
+												Load
+											</Button>
+											<Button
+												size="1"
+												variant="soft"
+												color="red"
+												onClick={() => deleteChat(chat.id)}
+											>
+												Delete
+											</Button>
+										</div>
+									</div>
+								</Card>
+							))}
+						</div>
+					</Card>
 				)}
 
 				{/* Results */}
