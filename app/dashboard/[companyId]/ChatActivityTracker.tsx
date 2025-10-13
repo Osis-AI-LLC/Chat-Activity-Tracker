@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
-	Button,
-	TextField,
-	Heading,
-	Text,
-	Badge,
 	Avatar,
+	Badge,
+	Button,
 	Callout,
-	Spinner,
 	Card,
 	Dialog,
+	Heading,
 	Select,
+	Spinner,
+	Text,
+	TextField,
 } from "frosted-ui";
+import { useEffect, useState } from "react";
 
 interface MessageUser {
 	name?: string;
@@ -58,7 +58,9 @@ interface SavedChat {
 	savedAt: string;
 }
 
-export default function ChatActivityTracker({ companyId }: ChatActivityTrackerProps) {
+export default function ChatActivityTracker({
+	companyId,
+}: ChatActivityTrackerProps) {
 	const [availableChats, setAvailableChats] = useState<ChatExperience[]>([]);
 	const [loadingChats, setLoadingChats] = useState(true);
 	const [chatExperienceId, setChatExperienceId] = useState("");
@@ -69,6 +71,7 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 	const [error, setError] = useState<string | null>(null);
 	const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
 	const [saveSuccess, setSaveSuccess] = useState(false);
+	const [useCustomId, setUseCustomId] = useState(false);
 
 	// Load saved chats from localStorage on mount
 	useEffect(() => {
@@ -105,7 +108,7 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 
 				const data = await response.json();
 				setAvailableChats(data.chats);
-				
+
 				// Auto-select the first chat if available
 				if (data.chats.length > 0) {
 					setChatExperienceId(data.chats[0].id);
@@ -202,7 +205,9 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 							</Dialog.Description>
 							<div className="space-y-3">
 								<Text size="2" className="block">
-									→ Select a chat from the dropdown (automatically loaded from your shop)
+									→ Select a chat from the dropdown (automatically loaded from
+									your shop) OR click "Enter Custom ID" to manually input an
+									experience ID
 								</Text>
 								<Text size="2" className="block">
 									→ Select the date you want to analyze
@@ -229,84 +234,115 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 					</Card>
 				)}
 
-				{/* No Chats Available */}
-				{!loadingChats && availableChats.length === 0 && (
-					<Callout.Root color="amber" size="2">
-						<Callout.Text>
-							<Text size="2" weight="medium">
-								No chat experiences found in this shop. Please create a chat experience first.
-							</Text>
-						</Callout.Text>
-					</Callout.Root>
-				)}
-
 				{/* Input Form */}
-				{!loadingChats && availableChats.length > 0 && (
+				{!loadingChats && (
 					<Card size="3">
 						<div className="space-y-4">
 							<div>
-								<Text size="2" weight="medium" className="block mb-2" as="label">
-									Select Chat
-								</Text>
-								<Select.Root value={chatExperienceId} onValueChange={setChatExperienceId}>
-									<Select.Trigger className="w-full" />
-									<Select.Content>
-										{availableChats.map((chat) => (
-											<Select.Item key={chat.id} value={chat.id}>
-												{chat.name}
-											</Select.Item>
-										))}
-									</Select.Content>
-								</Select.Root>
+								<div className="flex justify-between items-center mb-2">
+									<Text size="2" weight="medium" as="label">
+										{useCustomId ? "Enter Custom Experience ID" : "Select Chat"}
+									</Text>
+									<Button
+										size="1"
+										variant="ghost"
+										onClick={() => {
+											setUseCustomId(!useCustomId);
+											setChatExperienceId("");
+										}}
+									>
+										{useCustomId ? "← Use Dropdown" : "Enter Custom ID →"}
+									</Button>
+								</div>
+
+								{useCustomId ? (
+									<TextField.Root size="3" variant="surface">
+										<TextField.Input
+											placeholder="exp_xxxxxxxxxx"
+											value={chatExperienceId}
+											onChange={(e) => setChatExperienceId(e.target.value)}
+										/>
+									</TextField.Root>
+								) : availableChats.length > 0 ? (
+									<>
+										<Select.Root
+											value={chatExperienceId}
+											onValueChange={setChatExperienceId}
+										>
+											<Select.Trigger className="w-full" />
+											<Select.Content>
+												{availableChats.map((chat) => (
+													<Select.Item key={chat.id} value={chat.id}>
+														{chat.name}
+													</Select.Item>
+												))}
+											</Select.Content>
+										</Select.Root>
+									</>
+								) : (
+									<Callout.Root color="amber" size="1">
+										<Callout.Text>
+											<Text size="2">
+												No chat experiences found. Use custom ID instead.
+											</Text>
+										</Callout.Text>
+									</Callout.Root>
+								)}
+
 								{chatExperienceId && (
 									<Text size="1" color="gray" className="mt-1 block">
-										ID: {chatExperienceId}
+										{useCustomId ? "Custom " : ""}ID: {chatExperienceId}
 									</Text>
 								)}
 							</div>
 
-						<div>
-							<Text size="2" weight="medium" className="block mb-2" as="label">
-								Date
-							</Text>
-							<TextField.Root size="3" variant="surface">
-								<TextField.Input
-									type="date"
-									value={selectedDate}
-									onChange={(e) => setSelectedDate(e.target.value)}
-									className="pr-3"
-								/>
-							</TextField.Root>
-						</div>
+							<div>
+								<Text
+									size="2"
+									weight="medium"
+									className="block mb-2"
+									as="label"
+								>
+									Date
+								</Text>
+								<TextField.Root size="3" variant="surface">
+									<TextField.Input
+										type="date"
+										value={selectedDate}
+										onChange={(e) => setSelectedDate(e.target.value)}
+										className="pr-3"
+									/>
+								</TextField.Root>
+							</div>
 
-						<div className="pt-2 flex gap-2">
-							<Button
-								onClick={fetchChatActivity}
-								disabled={loading || !chatExperienceId || !selectedDate}
-								size="2"
-								variant="soft"
-							>
-								{loading ? (
-									<span className="flex items-center gap-2">
-										<Spinner size="1" />
-										<span>Fetching...</span>
-									</span>
-								) : (
-									"Track Activity"
-								)}
-							</Button>
-					<Button
-						onClick={saveChat}
-						disabled={!chatExperienceId || !selectedDate}
-						size="2"
-						variant="surface"
-					>
-						Save Chat
-					</Button>
-					</div>
-					</div>
-				</Card>
-			)}
+							<div className="pt-2 flex gap-2">
+								<Button
+									onClick={fetchChatActivity}
+									disabled={loading || !chatExperienceId || !selectedDate}
+									size="2"
+									variant="soft"
+								>
+									{loading ? (
+										<span className="flex items-center gap-2">
+											<Spinner size="1" />
+											<span>Fetching...</span>
+										</span>
+									) : (
+										"Track Activity"
+									)}
+								</Button>
+								<Button
+									onClick={saveChat}
+									disabled={!chatExperienceId || !selectedDate}
+									size="2"
+									variant="surface"
+								>
+									Save Chat
+								</Button>
+							</div>
+						</div>
+					</Card>
+				)}
 
 				{/* Success Message */}
 				{saveSuccess && (
@@ -337,37 +373,38 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 							Saved Chats
 						</Heading>
 						<div className="space-y-2">
-			{savedChats.map((chat) => (
-				<Card key={chat.id} size="2" variant="surface">
-					<div className="flex justify-between items-center">
-						<div className="flex-1">
-							<Text size="2" weight="medium" className="block">
-								{chat.name}
-							</Text>
-							<Text size="1" color="gray">
-								{chat.date} • Saved {new Date(chat.savedAt).toLocaleDateString()}
-							</Text>
-						</div>
-						<div className="flex gap-2">
-							<Button
-								size="1"
-								variant="soft"
-								onClick={() => loadChat(chat)}
-							>
-								Load
-							</Button>
-							<Button
-								size="1"
-								variant="soft"
-								color="red"
-								onClick={() => deleteChat(chat.id)}
-							>
-								Delete
-							</Button>
-						</div>
-					</div>
-				</Card>
-			))}
+							{savedChats.map((chat) => (
+								<Card key={chat.id} size="2" variant="surface">
+									<div className="flex justify-between items-center">
+										<div className="flex-1">
+											<Text size="2" weight="medium" className="block">
+												{chat.name}
+											</Text>
+											<Text size="1" color="gray">
+												{chat.date} • Saved{" "}
+												{new Date(chat.savedAt).toLocaleDateString()}
+											</Text>
+										</div>
+										<div className="flex gap-2">
+											<Button
+												size="1"
+												variant="soft"
+												onClick={() => loadChat(chat)}
+											>
+												Load
+											</Button>
+											<Button
+												size="1"
+												variant="soft"
+												color="red"
+												onClick={() => deleteChat(chat.id)}
+											>
+												Delete
+											</Button>
+										</div>
+									</div>
+								</Card>
+							))}
 						</div>
 					</Card>
 				)}
@@ -377,8 +414,10 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 					<Card size="3">
 						<div className="space-y-6">
 							<div>
-								<Heading size="6" className="mb-4">Activity Summary</Heading>
-								
+								<Heading size="6" className="mb-4">
+									Activity Summary
+								</Heading>
+
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 									<div>
 										<Text size="2" color="gray" className="block mb-1">
@@ -403,15 +442,15 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 									<Text size="2" color="gray" className="block mb-2">
 										Total Messages
 									</Text>
-									<Heading size="8">
-										{activityData.totalMessages}
-									</Heading>
+									<Heading size="8">{activityData.totalMessages}</Heading>
 								</Card>
 							</div>
 
 							{activityData.messages && activityData.messages.length > 0 && (
 								<div>
-									<Heading size="5" className="mb-4">Recent Messages</Heading>
+									<Heading size="5" className="mb-4">
+										Recent Messages
+									</Heading>
 									<div className="space-y-3">
 										{activityData.messages.slice(0, 10).map((msg) => (
 											<Card key={msg.id} size="2" variant="surface">
@@ -421,15 +460,23 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 															<Avatar
 																size="2"
 																src={msg.user.profilePicture.sourceUrl}
-																fallback={msg.user?.name?.[0] || msg.user?.username?.[0] || "?"}
+																fallback={
+																	msg.user?.name?.[0] ||
+																	msg.user?.username?.[0] ||
+																	"?"
+																}
 															/>
 														)}
 														<div>
 															<Text size="2" weight="medium">
-																{msg.user?.name || msg.user?.username || "Unknown User"}
+																{msg.user?.name ||
+																	msg.user?.username ||
+																	"Unknown User"}
 															</Text>
 															{msg.user?.username && msg.user?.name && (
-																<Text size="1" color="gray">@{msg.user.username}</Text>
+																<Text size="1" color="gray">
+																	@{msg.user.username}
+																</Text>
 															)}
 														</div>
 													</div>
@@ -442,17 +489,25 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 												</Text>
 												<div className="flex gap-2">
 													{msg.isPinned && (
-														<Badge color="yellow" size="1">📌 Pinned</Badge>
+														<Badge color="yellow" size="1">
+															📌 Pinned
+														</Badge>
 													)}
 													{msg.isEdited && (
-														<Badge color="gray" size="1" variant="soft">edited</Badge>
+														<Badge color="gray" size="1" variant="soft">
+															edited
+														</Badge>
 													)}
 												</div>
 											</Card>
 										))}
 									</div>
 									{activityData.messages.length > 10 && (
-										<Text size="2" color="gray" className="text-center mt-4 block">
+										<Text
+											size="2"
+											color="gray"
+											className="text-center mt-4 block"
+										>
 											Showing 10 of {activityData.messages.length} messages
 										</Text>
 									)}
