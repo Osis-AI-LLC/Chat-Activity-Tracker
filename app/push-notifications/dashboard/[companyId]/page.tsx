@@ -1,34 +1,21 @@
 import { whopSdk } from "@/lib/whop-sdk";
 import { headers } from "next/headers";
-import PushNotificationSender from "./PushNotificationSender";
+import PushNotificationSender from "../../PushNotificationSender";
 
-export default async function PushNotificationsPage() {
+export default async function PushNotificationsPage({
+	params,
+}: {
+	params: Promise<{ companyId: string }>;
+}) {
 	try {
 		// The headers contains the user token
 		const headersList = await headers();
 
+		// The companyId is a path param
+		const { companyId } = await params;
+
 		// The user token is in the headers
 		const { userId } = await whopSdk.verifyUserToken(headersList);
-
-		// Get the company ID from the SDK configuration
-		const companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID;
-
-		if (!companyId) {
-			return (
-				<div className="flex justify-center items-center h-screen px-8">
-					<div className="text-center">
-						<h1 className="text-2xl font-bold text-red-600 mb-4">
-							Configuration Error
-						</h1>
-						<p className="text-gray-700">
-							Company ID is not configured.
-							<br />
-							Please set NEXT_PUBLIC_WHOP_COMPANY_ID in your environment variables.
-						</p>
-					</div>
-				</div>
-			);
-		}
 
 		const result = await whopSdk.access.checkIfUserHasAccessToCompany({
 			userId,
