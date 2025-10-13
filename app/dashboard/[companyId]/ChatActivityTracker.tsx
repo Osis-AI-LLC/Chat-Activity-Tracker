@@ -13,6 +13,7 @@ import {
 	Text,
 	TextField,
 } from "frosted-ui";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface MessageUser {
@@ -182,16 +183,22 @@ export default function ChatActivityTracker({
 	return (
 		<div className="min-h-screen bg-gray-1 py-8 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-4xl mx-auto space-y-6">
-				{/* Header with How to Use button */}
-				<div className="mb-8 flex justify-between items-start">
-					<div>
-						<Heading size="8" className="mb-2">
-							Chat Activity Tracker
-						</Heading>
-						<Text size="3" color="gray">
-							Track and analyze message activity in your chat experiences
-						</Text>
-					</div>
+			{/* Header with buttons */}
+			<div className="mb-8 flex justify-between items-start">
+				<div>
+					<Heading size="8" className="mb-2">
+						Chat Activity Tracker
+					</Heading>
+					<Text size="3" color="gray">
+						Track and analyze message activity in your chat experiences
+					</Text>
+				</div>
+				<div className="flex gap-2">
+					<Link href={`/push-notifications/dashboard/${companyId}`}>
+						<Button variant="solid" size="2">
+							📢 Push Notifications
+						</Button>
+					</Link>
 					<Dialog.Root>
 						<Dialog.Trigger>
 							<Button variant="soft" size="2">
@@ -224,6 +231,7 @@ export default function ChatActivityTracker({
 						</Dialog.Content>
 					</Dialog.Root>
 				</div>
+			</div>
 
 				{/* Loading State */}
 				{loadingChats && (
