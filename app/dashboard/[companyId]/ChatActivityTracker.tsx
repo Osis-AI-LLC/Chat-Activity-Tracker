@@ -50,9 +50,6 @@ interface ChatActivityTrackerProps {
 	companyId: string;
 }
 
-export default function ChatActivityTracker({ companyId }: ChatActivityTrackerProps) {
-	const [availableChats, setAvailableChats] = useState<ChatExperience[]>([]);
-	const [loadingChats, setLoadingChats] = useState(true);
 interface SavedChat {
 	id: string;
 	name: string;
@@ -61,7 +58,9 @@ interface SavedChat {
 	savedAt: string;
 }
 
-export default function ChatActivityTracker() {
+export default function ChatActivityTracker({ companyId }: ChatActivityTrackerProps) {
+	const [availableChats, setAvailableChats] = useState<ChatExperience[]>([]);
+	const [loadingChats, setLoadingChats] = useState(true);
 	const [chatExperienceId, setChatExperienceId] = useState("");
 	const [selectedDate, setSelectedDate] = useState("");
 	const [chatName, setChatName] = useState("");
@@ -219,34 +218,9 @@ export default function ChatActivityTracker() {
 							</div>
 						</Dialog.Content>
 					</Dialog.Root>
-				</div>
+			</div>
 
-
-				{/* Input Form */}
-				<Card size="3">
-					<div className="space-y-4">
-						<div>
-							<Text size="2" weight="medium" className="block mb-2" as="label">
-								Chat Name (Optional)
-							</Text>
-							<TextField.Root size="3" variant="surface">
-								<TextField.Input
-									placeholder="e.g., Main Community Chat"
-									value={chatName}
-									onChange={(e) => setChatName(e.target.value)}
-								/>
-							</TextField.Root>
-						</div>
-
-						<div>
-							<Text size="2" weight="medium" className="block mb-2" as="label">
-								Chat Experience ID
-							</Text>
-						</div>
-					</Card>
-				)}
-
-				{/* No Chats Available */}
+			{/* No Chats Available */}
 				{!loadingChats && availableChats.length === 0 && (
 					<Callout.Root color="amber" size="2">
 						<Callout.Text>
@@ -312,17 +286,18 @@ export default function ChatActivityTracker() {
 									"Track Activity"
 								)}
 							</Button>
-						<Button
-							onClick={saveChat}
-							disabled={!chatExperienceId || !selectedDate}
-							size="2"
-							variant="surface"
-						>
-							Save Chat
-						</Button>
-						</div>
-					</Card>
-				)}
+					<Button
+						onClick={saveChat}
+						disabled={!chatExperienceId || !selectedDate}
+						size="2"
+						variant="surface"
+					>
+						Save Chat
+					</Button>
+					</div>
+				</div>
+			</Card>
+			)}
 
 				{/* Success Message */}
 				{saveSuccess && (
