@@ -3,11 +3,11 @@ import { WhopServerSdk } from "@whop/api";
 export const whopSdk = WhopServerSdk({
 	// Add your app id here - this is required.
 	// You can get this from the Whop dashboard after creating an app section.
-	appId: process.env.NEXT_PUBLIC_WHOP_APP_ID ?? "fallback",
+	appId: process.env.NEXT_PUBLIC_WHOP_APP_ID ?? "app_00000000000000000000000000",
 
 	// Add your app api key here - this is required.
 	// You can get this from the Whop dashboard after creating an app section.
-	appApiKey: process.env.WHOP_API_KEY ?? "fallback",
+	appApiKey: process.env.WHOP_API_KEY ?? "whop_00000000000000000000000000000000",
 
 	// This will make api requests on behalf of this user.
 	// This is optional, however most api requests need to be made on behalf of a user.
