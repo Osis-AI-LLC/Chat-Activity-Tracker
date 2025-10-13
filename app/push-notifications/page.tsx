@@ -1,61 +1,36 @@
 import { whopSdk } from "@/lib/whop-sdk";
-import { headers } from "next/headers";
-import PushNotificationSender from "./PushNotificationSender";
+import { redirect } from "next/navigation";
 
-export default async function PushNotificationsPage() {
-	// The headers contains the user token
-	const headersList = await headers();
-
-	// The user token is in the headers
-	const { userId } = await whopSdk.verifyUserToken(headersList);
-
-	// Get the company ID from the SDK configuration
+export default async function PushNotificationsRedirect() {
+	// Try to get the companyId from environment
 	const companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID;
 
-	if (!companyId) {
-		return (
-			<div className="flex justify-center items-center h-screen px-8">
-				<div className="text-center">
-					<h1 className="text-2xl font-bold text-red-600 mb-4">
-						Configuration Error
-					</h1>
-					<p className="text-gray-700">
-						Company ID is not configured.
-						<br />
-						Please set NEXT_PUBLIC_WHOP_COMPANY_ID in your environment variables.
-					</p>
-				</div>
-			</div>
-		);
+	// If we have a companyId configured, redirect to it
+	if (companyId) {
+		redirect(`/push-notifications/${companyId}`);
 	}
 
-	const result = await whopSdk.access.checkIfUserHasAccessToCompany({
-		userId,
-		companyId,
-	});
-
-	// Either: 'admin' | 'no_access';
-	// 'admin' means the user is an admin of the company, such as an owner or moderator
-	// 'no_access' means the user is not an authorized member of the company
-	const { accessLevel } = result;
-
-	// Only allow admins/moderators to send push notifications
-	if (!result.hasAccess || accessLevel === "no_access") {
-		return (
-			<div className="flex justify-center items-center h-screen px-8">
-				<div className="text-center">
-					<h1 className="text-2xl font-bold text-red-600 mb-4">
-						Access Denied
-					</h1>
-					<p className="text-gray-700">
-						You do not have permission to send push notifications.
-						<br />
-						Only company administrators and moderators can access this page.
-					</p>
-				</div>
+	// Otherwise show an error message
+	return (
+		<div className="flex justify-center items-center h-screen px-8">
+			<div className="text-center max-w-2xl">
+				<h1 className="text-2xl font-bold text-amber-600 mb-4">
+					Company ID Required
+				</h1>
+				<p className="text-gray-700 mb-4">
+					To access the push notifications page, you need to specify your company
+					ID in the URL.
+				</p>
+				<p className="text-gray-600 text-sm">
+					Use the URL format:{" "}
+					<code className="bg-gray-100 px-2 py-1 rounded">
+						/push-notifications/[your-company-id]
+					</code>
+				</p>
+				<p className="text-gray-600 text-sm mt-4">
+					Replace <code className="bg-gray-100 px-2 py-1 rounded">[your-company-id]</code> with your actual Whop company ID (e.g., biz_XXXXXXXX).
+				</p>
 			</div>
-		);
-	}
-
-	return <PushNotificationSender companyId={companyId} />;
+		</div>
+	);
 }
