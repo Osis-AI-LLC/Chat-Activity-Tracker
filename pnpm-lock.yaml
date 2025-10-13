@@ -17,6 +17,9 @@ importers:
       '@whop/react':
         specifier: 0.2.36
         version: 0.2.36(@auth/core@0.40.0)(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      frosted-ui:
+        specifier: 0.0.1-canary.80
+        version: 0.0.1-canary.80(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       next:
         specifier: 15.3.2
         version: 15.3.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -283,8 +286,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@internationalized/date@3.8.2':
-    resolution: {integrity: sha512-/wENk7CbvLbkUvX1tu0mwq49CVkkWpkXubGel6birjRPyo6uQ4nQpnq5xZu823zRCwwn82zgHrvgF1vZyvmVgA==}
+  '@internationalized/date@3.10.0':
+    resolution: {integrity: sha512-oxDR/NTEJ1k+UFVQElaNIk65E/Z83HK1z1WI3lQyhTtnNg4R5oVXaPzK3jcpKG8UHKDVuDQHzn+wsxSz8RP3aw==}
 
   '@internationalized/message@3.1.8':
     resolution: {integrity: sha512-Rwk3j/TlYZhn3HQ6PyXUV0XP9Uv42jqZGNegt0BXlxjE6G3+LwHjbQZAGHhCnCPdaA6Tvd3ma/7QzLlLkJxAWA==}
@@ -1885,6 +1888,19 @@ packages:
       '@types/react-dom':
         optional: true
 
+  frosted-ui@0.0.1-canary.80:
+    resolution: {integrity: sha512-gsrUkhk793laDsEXOyZw1KY5Eb98n3u6Y1wWwXkjnEDPdC67flt+vPhlAZSg0eT7O2ZYQtQPCL9hOXPjl5Vdzw==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
   get-nonce@1.0.1:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
     engines: {node: '>=6'}
@@ -2442,7 +2458,7 @@ snapshots:
   '@img/sharp-win32-x64@0.34.1':
     optional: true
 
-  '@internationalized/date@3.8.2':
+  '@internationalized/date@3.10.0':
     dependencies:
       '@swc/helpers': 0.5.15
 
@@ -3280,7 +3296,7 @@ snapshots:
 
   '@react-aria/calendar@3.8.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@react-aria/i18n': 3.12.10(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@react-aria/interactions': 3.25.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@react-aria/live-announcer': 3.4.3
@@ -3368,7 +3384,7 @@ snapshots:
 
   '@react-aria/datepicker@3.14.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@internationalized/number': 3.6.3
       '@internationalized/string': 3.2.7
       '@react-aria/focus': 3.20.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -3482,7 +3498,7 @@ snapshots:
 
   '@react-aria/i18n@3.12.10(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@internationalized/message': 3.1.8
       '@internationalized/number': 3.6.3
       '@internationalized/string': 3.2.7
@@ -3891,7 +3907,7 @@ snapshots:
 
   '@react-stately/calendar@3.8.2(react@19.1.0)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@react-stately/utils': 3.10.7(react@19.1.0)
       '@react-types/calendar': 3.7.2(react@19.1.0)
       '@react-types/shared': 3.30.0(react@19.1.0)
@@ -3947,7 +3963,7 @@ snapshots:
 
   '@react-stately/datepicker@3.14.2(react@19.1.0)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@internationalized/string': 3.2.7
       '@react-stately/form': 3.1.5(react@19.1.0)
       '@react-stately/overlays': 3.6.17(react@19.1.0)
@@ -4134,7 +4150,7 @@ snapshots:
 
   '@react-types/calendar@3.7.2(react@19.1.0)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@react-types/shared': 3.30.0(react@19.1.0)
       react: 19.1.0
 
@@ -4162,7 +4178,7 @@ snapshots:
 
   '@react-types/datepicker@3.12.2(react@19.1.0)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@react-types/calendar': 3.7.2(react@19.1.0)
       '@react-types/overlays': 3.8.16(react@19.1.0)
       '@react-types/shared': 3.30.0(react@19.1.0)
@@ -4499,7 +4515,37 @@ snapshots:
   frosted-ui@0.0.1-canary.77(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@frosted-ui/colors': 0.0.1-canary.61
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
+      '@radix-ui/primitive': 1.1.2
+      '@radix-ui/react-context': 1.1.2(@types/react@19.1.4)(react@19.1.0)
+      '@radix-ui/react-direction': 1.1.1(@types/react@19.1.4)(react@19.1.0)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.1.4)(react@19.1.0)
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.1.4)(react@19.1.0)
+      '@react-aria/calendar': 3.8.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@react-aria/datepicker': 3.14.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@react-aria/focus': 3.20.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@react-aria/i18n': 3.12.10(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@react-aria/utils': 3.29.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@react-stately/calendar': 3.8.2(react@19.1.0)
+      '@react-stately/datepicker': 3.14.2(react@19.1.0)
+      classnames: 2.5.1
+      input-otp: 1.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      radix-ui: 1.4.2(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-aria-components: 1.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-dom: 19.1.0(react@19.1.0)
+      tailwindcss: 4.1.6
+      tslib: 2.8.1
+      vaul: 0.9.9(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    optionalDependencies:
+      '@types/react': 19.1.4
+      '@types/react-dom': 19.1.5(@types/react@19.1.4)
+
+  frosted-ui@0.0.1-canary.80(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      '@frosted-ui/colors': 0.0.1-canary.61
+      '@internationalized/date': 3.10.0
       '@radix-ui/primitive': 1.1.2
       '@radix-ui/react-context': 1.1.2(@types/react@19.1.4)(react@19.1.0)
       '@radix-ui/react-direction': 1.1.1(@types/react@19.1.4)(react@19.1.0)
@@ -4750,7 +4796,7 @@ snapshots:
 
   react-aria-components@1.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.0
       '@internationalized/string': 3.2.7
       '@react-aria/color': 3.0.0-beta.33(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@react-aria/focus': 3.20.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
