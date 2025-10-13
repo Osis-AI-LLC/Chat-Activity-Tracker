@@ -234,14 +234,14 @@ export default function ChatActivityTracker() {
 									"Track Activity"
 								)}
 							</Button>
-							<Button
-								onClick={saveChat}
-								disabled={!chatExperienceId || !selectedDate}
-								size="2"
-								variant="outline"
-							>
-								Save Chat
-							</Button>
+						<Button
+							onClick={saveChat}
+							disabled={!chatExperienceId || !selectedDate}
+							size="2"
+							variant="surface"
+						>
+							Save Chat
+						</Button>
 						</div>
 					</div>
 				</Card>
