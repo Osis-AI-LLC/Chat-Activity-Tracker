@@ -337,45 +337,37 @@ export default function ChatActivityTracker({ companyId }: ChatActivityTrackerPr
 							Saved Chats
 						</Heading>
 						<div className="space-y-2">
-							{savedChats.map((chat) => (
-								<Card key={chat.id} size="2" variant="surface">
-									<div className="flex justify-between items-start">
-										<div className="flex-1">
-											<Text size="3" weight="medium" className="block mb-1">
-												{chat.name}
-											</Text>
-											<Text size="2" color="gray" className="block mb-1">
-												Exp ID: {chat.expId}
-											</Text>
-											<div className="flex gap-3">
-												<Text size="1" color="gray">
-													Date: {chat.date}
-												</Text>
-												<Text size="1" color="gray">
-													Saved: {new Date(chat.savedAt).toLocaleDateString()}
-												</Text>
-											</div>
-										</div>
-										<div className="flex gap-2">
-											<Button
-												size="1"
-												variant="soft"
-												onClick={() => loadChat(chat)}
-											>
-												Load
-											</Button>
-											<Button
-												size="1"
-												variant="soft"
-												color="red"
-												onClick={() => deleteChat(chat.id)}
-											>
-												Delete
-											</Button>
-										</div>
-									</div>
-								</Card>
-							))}
+			{savedChats.map((chat) => (
+				<Card key={chat.id} size="2" variant="surface">
+					<div className="flex justify-between items-center">
+						<div className="flex-1">
+							<Text size="2" weight="medium" className="block">
+								{chat.name}
+							</Text>
+							<Text size="1" color="gray">
+								{chat.date} • Saved {new Date(chat.savedAt).toLocaleDateString()}
+							</Text>
+						</div>
+						<div className="flex gap-2">
+							<Button
+								size="1"
+								variant="soft"
+								onClick={() => loadChat(chat)}
+							>
+								Load
+							</Button>
+							<Button
+								size="1"
+								variant="soft"
+								color="red"
+								onClick={() => deleteChat(chat.id)}
+							>
+								Delete
+							</Button>
+						</div>
+					</div>
+				</Card>
+			))}
 						</div>
 					</Card>
 				)}
