@@ -12,6 +12,7 @@ import {
 	Spinner,
 	Card,
 	Dialog,
+	Select,
 } from "frosted-ui";
 
 interface MessageUser {
@@ -38,6 +39,20 @@ interface ActivityData {
 	messages: Message[];
 }
 
+interface ChatExperience {
+	id: string;
+	name: string;
+	description?: string;
+	logo?: string | null;
+}
+
+interface ChatActivityTrackerProps {
+	companyId: string;
+}
+
+export default function ChatActivityTracker({ companyId }: ChatActivityTrackerProps) {
+	const [availableChats, setAvailableChats] = useState<ChatExperience[]>([]);
+	const [loadingChats, setLoadingChats] = useState(true);
 interface SavedChat {
 	id: string;
 	name: string;
@@ -74,6 +89,37 @@ export default function ChatActivityTracker() {
 			localStorage.setItem("savedChats", JSON.stringify(savedChats));
 		}
 	}, [savedChats]);
+
+	// Fetch available chats when component mounts
+	useEffect(() => {
+		const fetchChats = async () => {
+			setLoadingChats(true);
+			try {
+				const response = await fetch(
+					`/api/chats?companyId=${encodeURIComponent(companyId)}`,
+				);
+
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || "Failed to fetch chats");
+				}
+
+				const data = await response.json();
+				setAvailableChats(data.chats);
+				
+				// Auto-select the first chat if available
+				if (data.chats.length > 0) {
+					setChatExperienceId(data.chats[0].id);
+				}
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Failed to load chats");
+			} finally {
+				setLoadingChats(false);
+			}
+		};
+
+		fetchChats();
+	}, [companyId]);
 
 	const fetchChatActivity = async () => {
 		setLoading(true);
@@ -157,7 +203,7 @@ export default function ChatActivityTracker() {
 							</Dialog.Description>
 							<div className="space-y-3">
 								<Text size="2" className="block">
-									→ Enter the Chat Experience ID (starts with "exp_")
+									→ Select a chat from the dropdown (automatically loaded from your shop)
 								</Text>
 								<Text size="2" className="block">
 									→ Select the date you want to analyze
@@ -174,6 +220,7 @@ export default function ChatActivityTracker() {
 						</Dialog.Content>
 					</Dialog.Root>
 				</div>
+
 
 				{/* Input Form */}
 				<Card size="3">
@@ -195,14 +242,45 @@ export default function ChatActivityTracker() {
 							<Text size="2" weight="medium" className="block mb-2" as="label">
 								Chat Experience ID
 							</Text>
-							<TextField.Root size="3" variant="surface">
-								<TextField.Input
-									placeholder="exp_XXXXXXXX"
-									value={chatExperienceId}
-									onChange={(e) => setChatExperienceId(e.target.value)}
-								/>
-							</TextField.Root>
 						</div>
+					</Card>
+				)}
+
+				{/* No Chats Available */}
+				{!loadingChats && availableChats.length === 0 && (
+					<Callout.Root color="amber" size="2">
+						<Callout.Text>
+							<Text size="2" weight="medium">
+								No chat experiences found in this shop. Please create a chat experience first.
+							</Text>
+						</Callout.Text>
+					</Callout.Root>
+				)}
+
+				{/* Input Form */}
+				{!loadingChats && availableChats.length > 0 && (
+					<Card size="3">
+						<div className="space-y-4">
+							<div>
+								<Text size="2" weight="medium" className="block mb-2" as="label">
+									Select Chat
+								</Text>
+								<Select.Root value={chatExperienceId} onValueChange={setChatExperienceId}>
+									<Select.Trigger className="w-full" />
+									<Select.Content>
+										{availableChats.map((chat) => (
+											<Select.Item key={chat.id} value={chat.id}>
+												{chat.name}
+											</Select.Item>
+										))}
+									</Select.Content>
+								</Select.Root>
+								{chatExperienceId && (
+									<Text size="1" color="gray" className="mt-1 block">
+										ID: {chatExperienceId}
+									</Text>
+								)}
+							</div>
 
 						<div>
 							<Text size="2" weight="medium" className="block mb-2" as="label">
@@ -243,8 +321,8 @@ export default function ChatActivityTracker() {
 							Save Chat
 						</Button>
 						</div>
-					</div>
-				</Card>
+					</Card>
+				)}
 
 				{/* Success Message */}
 				{saveSuccess && (

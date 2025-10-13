@@ -44,5 +44,5 @@ export default async function DashboardPage({
 		);
 	}
 
-	return <ChatActivityTracker />;
+	return <ChatActivityTracker companyId={companyId} />;
 }
