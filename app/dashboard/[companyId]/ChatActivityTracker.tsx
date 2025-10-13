@@ -14,6 +14,7 @@ import {
 	TextField,
 } from "frosted-ui";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface MessageUser {
 	name?: string;
@@ -61,6 +62,7 @@ interface SavedChat {
 export default function ChatActivityTracker({
 	companyId,
 }: ChatActivityTrackerProps) {
+	const router = useRouter();
 	const [availableChats, setAvailableChats] = useState<ChatExperience[]>([]);
 	const [loadingChats, setLoadingChats] = useState(true);
 	const [chatExperienceId, setChatExperienceId] = useState("");
@@ -192,7 +194,15 @@ export default function ChatActivityTracker({
 							Track and analyze message activity in your chat experiences
 						</Text>
 					</div>
-					<Dialog.Root>
+					<div className="flex gap-2">
+						<Button
+							variant="solid"
+							size="2"
+							onClick={() => router.push(`/push-notifications/dashboard/${companyId}`)}
+						>
+							Push Notifications
+						</Button>
+						<Dialog.Root>
 						<Dialog.Trigger>
 							<Button variant="soft" size="2">
 								How to Use
@@ -223,6 +233,7 @@ export default function ChatActivityTracker({
 							</div>
 						</Dialog.Content>
 					</Dialog.Root>
+					</div>
 				</div>
 
 				{/* Loading State */}
