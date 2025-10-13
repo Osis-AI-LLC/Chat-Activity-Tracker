@@ -40,18 +40,19 @@ export async function GET(request: NextRequest): Promise<Response> {
 			);
 		}
 
-		// Extract experiences from the result
-		const experiences = result.experiencesV2?.nodes || [];
+	// Extract experiences from the result
+	const experiences = result.experiencesV2?.nodes || [];
 
-		// Filter and format chat experiences
-		const chatExperiences = experiences
-			.filter((exp) => exp !== null)
-			.map((exp) => ({
-				id: exp.id,
-				name: exp.name || "Unnamed Chat",
-				description: exp.description || "",
-				logo: exp.logo?.sourceUrl || null,
-			}));
+	// Filter and format chat experiences - only include chat apps
+	const CHAT_APP_ID = "app_xml5hbizmZPgUT";
+	const chatExperiences = experiences
+		.filter((exp) => exp !== null && exp.app?.id === CHAT_APP_ID)
+		.map((exp) => ({
+			id: exp.id,
+			name: exp.name || "Unnamed Chat",
+			description: exp.description || "",
+			logo: exp.logo?.sourceUrl || null,
+		}));
 
 		// Return the chat experiences with relevant info
 		return Response.json({
