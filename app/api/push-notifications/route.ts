@@ -44,9 +44,11 @@ export async function POST(request: Request) {
 					companyId: companyTeamId,
 				});
 
-			if (!accessResult.hasAccess || accessResult.accessLevel === "no_access") {
+			// Only check if user has access to the company (not specific access level)
+			// This allows all company members, not just admins
+			if (!accessResult.hasAccess) {
 				return NextResponse.json(
-					{ error: "You do not have permission to send notifications" },
+					{ error: "You must be a member of this company to send notifications" },
 					{ status: 403 },
 				);
 			}

@@ -22,13 +22,9 @@ export default async function PushNotificationsPage({
 			companyId,
 		});
 
-		// Either: 'admin' | 'no_access';
-		// 'admin' means the user is an admin of the company, such as an owner or moderator
-		// 'no_access' means the user is not an authorized member of the company
-		const { accessLevel } = result;
-
-		// Only allow admins/moderators to send push notifications
-		if (!result.hasAccess || accessLevel === "no_access") {
+		// Only check if user has access to the company (not specific access level)
+		// This allows all company members, not just admins
+		if (!result.hasAccess) {
 			return (
 				<div className="flex justify-center items-center h-screen px-8">
 					<div className="text-center">
@@ -38,7 +34,7 @@ export default async function PushNotificationsPage({
 						<p className="text-gray-700">
 							You do not have permission to send push notifications.
 							<br />
-							Only company administrators and moderators can access this page.
+							You must be a member of this company to access this page.
 						</p>
 					</div>
 				</div>

@@ -21,13 +21,9 @@ export default async function DashboardPage({
 		companyId,
 	});
 
-	// Either: 'admin' | 'no_access';
-	// 'admin' means the user is an admin of the company, such as an owner or moderator
-	// 'no_access' means the user is not an authorized member of the company
-	const { accessLevel } = result;
-
-	// Only allow admins/moderators to access the chat activity tracker
-	if (!result.hasAccess || accessLevel === "no_access") {
+	// Only check if user has access to the company (not specific access level)
+	// This allows all company members, not just admins
+	if (!result.hasAccess) {
 		return (
 			<div className="flex justify-center items-center h-screen px-8">
 				<div className="text-center">
@@ -37,7 +33,7 @@ export default async function DashboardPage({
 					<p className="text-gray-700">
 						You do not have permission to access the Chat Activity Tracker.
 						<br />
-						Only company administrators and moderators can view this page.
+						You must be a member of this company to view this page.
 					</p>
 				</div>
 			</div>
