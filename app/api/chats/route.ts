@@ -35,7 +35,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 			
 			// Check if there are more pages
 			hasNextPage = result.experiencesV2?.pageInfo?.hasNextPage || false;
-			cursor = result.experiencesV2?.pageInfo?.endCursor;
+			cursor = result.experiencesV2?.pageInfo?.endCursor || undefined;
 		}
 		
 		// Use the accumulated experiences
