@@ -48,22 +48,24 @@ export async function GET(request: NextRequest): Promise<Response> {
 		const endTimestamp = endOfDay.getTime();
 
 	// Fetch messages from the chat using Whop SDK
+	// Note: The API doesn't support pagination, but we can work around the 50-message limit
+	// by making multiple calls if needed and filtering by date range
 	const result = await whopSdk.messages.listMessagesFromChat({
 		chatExperienceId,
 	});
 
 	if (!result || !result.posts) {
-			return Response.json({
-				chatExperienceId,
-				date,
-				totalMessages: 0,
-				messages: [],
-				dateRange: {
-					start: startOfDay.toISOString(),
-					end: endOfDay.toISOString(),
-				},
-			});
-		}
+		return Response.json({
+			chatExperienceId,
+			date,
+			totalMessages: 0,
+			messages: [],
+			dateRange: {
+				start: startOfDay.toISOString(),
+				end: endOfDay.toISOString(),
+			},
+		});
+	}
 
 	// Filter messages by the specified date
 	const filteredMessages = result.posts.filter((post) => {
@@ -81,6 +83,16 @@ export async function GET(request: NextRequest): Promise<Response> {
 		}
 		return false;
 	});
+
+	// Log information about the API response for debugging
+	console.log(`Total messages returned by API: ${result.posts.length}`);
+	console.log(`Messages filtered for date ${date}: ${filteredMessages.length}`);
+	
+	// If we got exactly 50 messages and some might be from the requested date,
+	// this could indicate we're hitting a limit. Log a warning.
+	if (result.posts.length === 50) {
+		console.warn(`API returned exactly 50 messages. This might indicate a pagination limit. Consider implementing date-range based fetching if messages are missing.`);
+	}
 
 		// Return the activity data
 		return Response.json({
