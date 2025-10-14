@@ -226,7 +226,7 @@ export default function PushNotificationSender({
 											onValueChange={setExperienceId}
 										>
 											<Select.Trigger className="w-full" />
-											<Select.Content>
+											<Select.Content className="max-h-60 overflow-y-auto z-50">
 												{availableExperiences.map((exp) => (
 													<Select.Item key={exp.id} value={exp.id}>
 														{exp.name}

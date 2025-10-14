@@ -14,34 +14,32 @@ export async function GET(request: NextRequest): Promise<Response> {
 			);
 		}
 
-		// Fetch all experiences from the company
-		const result = await whopSdk.experiences.listExperiences({
-			companyId,
-			first: 100, // Fetch up to 100 experiences
-		});
-
-		if (!result) {
-			return Response.json(
-				{
-					error: "Failed to fetch experiences",
-					details: "No result returned from SDK",
-				},
-				{ status: 500 },
-			);
+		// Fetch all experiences from the company with pagination
+		let allExperiences: any[] = [];
+		let hasNextPage = true;
+		let cursor: string | undefined = undefined;
+		
+		while (hasNextPage) {
+			const result = await whopSdk.experiences.listExperiences({
+				companyId,
+				first: 100, // Fetch up to 100 experiences per page
+				after: cursor,
+			});
+			
+			if (!result || result._error) {
+				break;
+			}
+			
+			const experiences = result.experiencesV2?.nodes || [];
+			allExperiences = allExperiences.concat(experiences);
+			
+			// Check if there are more pages
+			hasNextPage = result.experiencesV2?.pageInfo?.hasNextPage || false;
+			cursor = result.experiencesV2?.pageInfo?.endCursor;
 		}
-
-		if (result._error) {
-			return Response.json(
-				{
-					error: "Failed to fetch experiences",
-					details: result._error.message,
-				},
-				{ status: 500 },
-			);
-		}
-
-	// Extract experiences from the result
-	const experiences = result.experiencesV2?.nodes || [];
+		
+		// Use the accumulated experiences
+		const experiences = allExperiences;
 
 	// Filter and format chat experiences - only include chat apps
 	const CHAT_APP_ID = "app_xml5hbizmZPgUT";
@@ -52,7 +50,8 @@ export async function GET(request: NextRequest): Promise<Response> {
 			name: exp.name || "Unnamed Chat",
 			description: exp.description || "",
 			logo: exp.logo?.sourceUrl || null,
-		}));
+		}))
+		.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
 
 		// Return the chat experiences with relevant info
 		return Response.json({

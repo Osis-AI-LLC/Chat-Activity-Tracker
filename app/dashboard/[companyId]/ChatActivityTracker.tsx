@@ -281,7 +281,7 @@ export default function ChatActivityTracker({
 											onValueChange={setChatExperienceId}
 										>
 											<Select.Trigger className="w-full" />
-											<Select.Content>
+											<Select.Content className="max-h-60 overflow-y-auto z-50">
 												{availableChats.map((chat) => (
 													<Select.Item key={chat.id} value={chat.id}>
 														{chat.name}
