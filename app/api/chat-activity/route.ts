@@ -20,18 +20,28 @@ export async function GET(request: NextRequest): Promise<Response> {
 		}
 
 		// Parse the date and get start/end timestamps for the day
-		const targetDate = new Date(date);
-		if (Number.isNaN(targetDate.getTime())) {
-			return Response.json({ error: "Invalid date format" }, { status: 400 });
+		// Parse YYYY-MM-DD format properly to avoid timezone issues
+		const dateParts = date.split('-');
+		if (dateParts.length !== 3) {
+			return Response.json({ error: "Invalid date format. Expected YYYY-MM-DD" }, { status: 400 });
 		}
 
-		// Set to start of day (00:00:00)
-		const startOfDay = new Date(targetDate);
-		startOfDay.setHours(0, 0, 0, 0);
+		const year = parseInt(dateParts[0], 10);
+		const month = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed
+		const day = parseInt(dateParts[2], 10);
 
-		// Set to end of day (23:59:59.999)
-		const endOfDay = new Date(targetDate);
-		endOfDay.setHours(23, 59, 59, 999);
+		if (isNaN(year) || isNaN(month) || isNaN(day)) {
+			return Response.json({ error: "Invalid date format. Expected YYYY-MM-DD" }, { status: 400 });
+		}
+
+		// Create dates in local timezone to avoid UTC/local confusion
+		const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
+		const endOfDay = new Date(year, month, day, 23, 59, 59, 999);
+
+		// Validate the dates are valid
+		if (Number.isNaN(startOfDay.getTime()) || Number.isNaN(endOfDay.getTime())) {
+			return Response.json({ error: "Invalid date" }, { status: 400 });
+		}
 
 		// Convert to Unix timestamps (milliseconds as per Whop SDK)
 		const startTimestamp = startOfDay.getTime();
@@ -60,6 +70,11 @@ export async function GET(request: NextRequest): Promise<Response> {
 		// Type guard to ensure post has createdAt property
 		if ("createdAt" in post && post.createdAt) {
 			const messageTimestamp = Number(post.createdAt);
+			// Validate that the timestamp is a valid number
+			if (isNaN(messageTimestamp)) {
+				console.warn("Invalid timestamp found:", post.createdAt);
+				return false;
+			}
 			return (
 				messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp
 			);

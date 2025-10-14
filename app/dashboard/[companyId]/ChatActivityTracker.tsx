@@ -393,7 +393,17 @@ export default function ChatActivityTracker({
 											</Text>
 											<Text size="1" color="gray">
 												{chat.date} • Saved{" "}
-												{new Date(chat.savedAt).toLocaleDateString()}
+												{(() => {
+													try {
+														const savedDate = new Date(chat.savedAt);
+														if (isNaN(savedDate.getTime())) {
+															return "Invalid date";
+														}
+														return savedDate.toLocaleDateString();
+													} catch (error) {
+														return "Invalid date";
+													}
+												})()}
 											</Text>
 										</div>
 										<div className="flex gap-2">
@@ -492,7 +502,17 @@ export default function ChatActivityTracker({
 														</div>
 													</div>
 													<Text size="1" color="gray">
-														{new Date(Number(msg.createdAt)).toLocaleString()}
+														{(() => {
+															try {
+																const timestamp = Number(msg.createdAt);
+																if (isNaN(timestamp)) {
+																	return "Invalid date";
+																}
+																return new Date(timestamp).toLocaleString();
+															} catch (error) {
+																return "Invalid date";
+															}
+														})()}
 													</Text>
 												</div>
 												<Text size="2" className="mb-2">
