@@ -36,23 +36,7 @@ export async function POST(request: Request) {
 			);
 		}
 
-		// Verify user has access to the company
-		if (companyTeamId) {
-			const accessResult =
-				await whopSdk.access.checkIfUserHasAccessToCompany({
-					userId,
-					companyId: companyTeamId,
-				});
-
-			// Only check if user has access to the company (not specific access level)
-			// This allows all company members, not just admins
-			if (!accessResult.hasAccess) {
-				return NextResponse.json(
-					{ error: "You must be a member of this company to send notifications" },
-					{ status: 403 },
-				);
-			}
-		}
+		// No longer checking company membership - allow access for any authenticated user
 
 		// Prepare notification parameters
 		const notificationParams: {
