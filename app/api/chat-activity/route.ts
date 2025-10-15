@@ -49,6 +49,17 @@ async function fetchAllMessagesWithPagination(chatExperienceId: string, startTim
 			console.log(`Fetched page ${pageCount} with ${data.length} messages`);
 
 			// Filter messages by the specified date range
+			// If the entire page is older than the requested start date, we can stop
+			const pageTimestamps = data
+				.map((message: any) => Number(message?.createdAt))
+				.filter((n: number) => !Number.isNaN(n));
+			if (pageTimestamps.length > 0) {
+				const pageMaxTs = Math.max(...pageTimestamps); // newest in page
+				if (pageMaxTs < startTimestamp) {
+					break;
+				}
+			}
+
 			const filteredMessages = data.filter((message: any) => {
 				if (!message.createdAt) return false;
 				const messageTimestamp = Number(message.createdAt);

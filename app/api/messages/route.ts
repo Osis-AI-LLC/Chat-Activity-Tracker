@@ -51,6 +51,17 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 			// Filter messages by date if timestamps are provided
 			let filteredMessages = data;
 			if (startTimestamp !== undefined && endTimestamp !== undefined) {
+ 				// If the entire page is older than the requested start date, we can stop
+ 				const pageTimestamps = data
+ 					.map((message: any) => Number(message?.createdAt))
+ 					.filter((n: number) => !Number.isNaN(n));
+ 				if (pageTimestamps.length > 0) {
+ 					const pageMaxTs = Math.max(...pageTimestamps); // newest in page
+ 					if (pageMaxTs < startTimestamp) {
+ 						break;
+ 					}
+ 				}
+
 				filteredMessages = data.filter((message: any) => {
 					if (!message.createdAt) return false;
 					const messageTimestamp = Number(message.createdAt);
