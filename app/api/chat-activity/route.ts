@@ -67,8 +67,16 @@ async function fetchAllMessagesWithPagination(chatExperienceId: string, startTim
 					console.warn("Invalid timestamp found:", message.createdAt);
 					return false;
 				}
-				return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+				const isInRange = messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+				
+				if (isInRange) {
+					console.log(`✅ Found matching message: ${new Date(messageTimestamp).toISOString()}`);
+				}
+				
+				return isInRange;
 			});
+			
+			console.log(`📊 Page ${pageCount}: Filtered ${filteredMessages.length} messages from ${data.length} total`);
 
 			allMessages.push(...filteredMessages);
 
@@ -126,9 +134,9 @@ export async function GET(request: NextRequest): Promise<Response> {
 			return Response.json({ error: "Invalid date format. Expected YYYY-MM-DD" }, { status: 400 });
 		}
 
-		// Create dates in local timezone to avoid UTC/local confusion
-		const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
-		const endOfDay = new Date(year, month, day, 23, 59, 59, 999);
+		// Use UTC dates to avoid timezone issues
+		const startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+		const endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
 
 		// Validate the dates are valid
 		if (Number.isNaN(startOfDay.getTime()) || Number.isNaN(endOfDay.getTime())) {
@@ -138,6 +146,10 @@ export async function GET(request: NextRequest): Promise<Response> {
 		// Convert to Unix timestamps (milliseconds as per Whop SDK)
 		const startTimestamp = startOfDay.getTime();
 		const endTimestamp = endOfDay.getTime();
+		
+		console.log(`🔍 Filtering for date: ${date}`);
+		console.log(`📅 UTC Start of day: ${startOfDay.toISOString()}`);
+		console.log(`📅 UTC End of day: ${endOfDay.toISOString()}`);
 
 	// Fetch messages from the chat using Whop SDK with pagination support
 	const allMessages = await fetchAllMessagesWithPagination(chatExperienceId, startTimestamp, endTimestamp);

@@ -66,8 +66,16 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 					if (!message.createdAt) return false;
 					const messageTimestamp = Number(message.createdAt);
 					if (isNaN(messageTimestamp)) return false;
-					return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+					const isInRange = messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+					
+					if (isInRange) {
+						console.log(`✅ Found matching message: ${new Date(messageTimestamp).toISOString()}`);
+					}
+					
+					return isInRange;
 				});
+				
+				console.log(`📊 Page ${pageCount}: Filtered ${filteredMessages.length} messages from ${data.length} total`);
 			}
 
 			allMessages.push(...filteredMessages);
@@ -125,8 +133,9 @@ export async function GET(request: NextRequest): Promise<Response> {
 				return Response.json({ error: "Invalid date format. Expected YYYY-MM-DD" }, { status: 400 });
 			}
 
-			const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
-			const endOfDay = new Date(year, month, day, 23, 59, 59, 999);
+			// Use UTC dates to avoid timezone issues
+			const startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+			const endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
 
 			if (Number.isNaN(startOfDay.getTime()) || Number.isNaN(endOfDay.getTime())) {
 				return Response.json({ error: "Invalid date" }, { status: 400 });
@@ -134,6 +143,10 @@ export async function GET(request: NextRequest): Promise<Response> {
 
 			startTimestamp = startOfDay.getTime();
 			endTimestamp = endOfDay.getTime();
+			
+			console.log(`🔍 Filtering for date: ${date}`);
+			console.log(`📅 UTC Start of day: ${startOfDay.toISOString()}`);
+			console.log(`📅 UTC End of day: ${endOfDay.toISOString()}`);
 		}
 
 		// Fetch all messages with pagination
