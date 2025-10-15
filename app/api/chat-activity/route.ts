@@ -36,15 +36,29 @@ async function fetchPageDirect(chatExperienceId: string, cursor: string | null =
 	
 	// Log sample message structure if we have data
 	if (data.data && data.data.length > 0) {
+		const firstMsg = data.data[0];
+		let createdAtParsed = 'Invalid date';
+		try {
+			const timestamp = Number(firstMsg.createdAt);
+			if (!isNaN(timestamp)) {
+				const date = new Date(timestamp);
+				if (!isNaN(date.getTime())) {
+					createdAtParsed = date.toISOString();
+				}
+			}
+		} catch (error) {
+			createdAtParsed = `Error parsing: ${error}`;
+		}
+		
 		console.log(`📝 Sample message structure:`, {
 			firstMessage: {
-				id: data.data[0].id,
-				createdAt: data.data[0].createdAt,
-				createdAtType: typeof data.data[0].createdAt,
-				createdAtValue: data.data[0].createdAt,
-				createdAtParsed: new Date(Number(data.data[0].createdAt)).toISOString(),
-				hasContent: !!data.data[0].content,
-				hasAuthor: !!data.data[0].author
+				id: firstMsg.id,
+				createdAt: firstMsg.createdAt,
+				createdAtType: typeof firstMsg.createdAt,
+				createdAtValue: firstMsg.createdAt,
+				createdAtParsed,
+				hasContent: !!firstMsg.content,
+				hasAuthor: !!firstMsg.author
 			}
 		});
 	}
