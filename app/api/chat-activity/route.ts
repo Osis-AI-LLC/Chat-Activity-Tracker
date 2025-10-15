@@ -22,6 +22,33 @@ async function fetchPageDirect(chatExperienceId: string, cursor: string | null =
 	}
 
 	const data = await response.json();
+	
+	// Log raw API response for debugging
+	console.log(`🔍 Raw API response for page ${cursor ? 'with cursor' : 'first'}:`);
+	console.log(`📊 Response structure:`, {
+		hasData: !!data.data,
+		dataLength: data.data?.length || 0,
+		hasPageInfo: !!data.page_info,
+		pageInfo: data.page_info,
+		hasNextPage: data.page_info?.has_next_page,
+		endCursor: data.page_info?.end_cursor
+	});
+	
+	// Log sample message structure if we have data
+	if (data.data && data.data.length > 0) {
+		console.log(`📝 Sample message structure:`, {
+			firstMessage: {
+				id: data.data[0].id,
+				createdAt: data.data[0].createdAt,
+				createdAtType: typeof data.data[0].createdAt,
+				createdAtValue: data.data[0].createdAt,
+				createdAtParsed: new Date(Number(data.data[0].createdAt)).toISOString(),
+				hasContent: !!data.data[0].content,
+				hasAuthor: !!data.data[0].author
+			}
+		});
+	}
+	
 	return {
 		data: data.data || [],
 		page_info: data.page_info || { has_next_page: false, end_cursor: null }
