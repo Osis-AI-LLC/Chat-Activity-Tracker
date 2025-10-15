@@ -61,7 +61,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 				console.log(`📄 Fetched page ${pageCount} with ${data.length} messages`);
 
 				// Collect timestamps from this page
-				const pageTimestamps = data.map(msg => Number(msg.createdAt)).filter(ts => !isNaN(ts));
+				const pageTimestamps = data.map((msg: any) => Number(msg.createdAt)).filter((ts: number) => !isNaN(ts));
 				allTimestamps.push(...pageTimestamps);
 
 				// Show date range for this page

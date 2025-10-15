@@ -50,7 +50,7 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 			
 			// Show date range for this page to help debug
 			if (data.length > 0) {
-				const timestamps = data.map(msg => Number(msg.createdAt)).filter(ts => !isNaN(ts));
+				const timestamps = data.map((msg: any) => Number(msg.createdAt)).filter((ts: number) => !isNaN(ts));
 				if (timestamps.length > 0) {
 					const minTs = Math.min(...timestamps);
 					const maxTs = Math.max(...timestamps);
@@ -165,14 +165,14 @@ export async function GET(request: NextRequest): Promise<Response> {
 		// If no date filter, show the actual date range of messages
 		let messageDateRange = null;
 		if (!date && allMessages.length > 0) {
-			const timestamps = allMessages.map(msg => Number(msg.createdAt)).filter(ts => !isNaN(ts));
+			const timestamps = allMessages.map((msg: any) => Number(msg.createdAt)).filter((ts: number) => !isNaN(ts));
 			if (timestamps.length > 0) {
 				const minTs = Math.min(...timestamps);
 				const maxTs = Math.max(...timestamps);
 				messageDateRange = {
 					oldest: new Date(minTs).toISOString(),
 					newest: new Date(maxTs).toISOString(),
-					availableDates: [...new Set(timestamps.map(ts => new Date(ts).toISOString().split('T')[0]))].sort().slice(0, 10)
+					availableDates: [...new Set(timestamps.map((ts: number) => new Date(ts).toISOString().split('T')[0]))].sort().slice(0, 10)
 				};
 			}
 		}
