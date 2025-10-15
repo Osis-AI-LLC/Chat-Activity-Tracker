@@ -47,6 +47,16 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 
 			pageCount++;
 			console.log(`Fetched page ${pageCount} with ${data.length} messages`);
+			
+			// Show date range for this page to help debug
+			if (data.length > 0) {
+				const timestamps = data.map(msg => Number(msg.createdAt)).filter(ts => !isNaN(ts));
+				if (timestamps.length > 0) {
+					const minTs = Math.min(...timestamps);
+					const maxTs = Math.max(...timestamps);
+					console.log(`  📅 Page date range: ${new Date(minTs).toISOString()} to ${new Date(maxTs).toISOString()}`);
+				}
+			}
 
 			// Filter messages by date if timestamps are provided
 			let filteredMessages = data;
@@ -152,6 +162,21 @@ export async function GET(request: NextRequest): Promise<Response> {
 		// Fetch all messages with pagination
 		const allMessages = await fetchAllMessagesWithPagination(experienceId, startTimestamp, endTimestamp);
 
+		// If no date filter, show the actual date range of messages
+		let messageDateRange = null;
+		if (!date && allMessages.length > 0) {
+			const timestamps = allMessages.map(msg => Number(msg.createdAt)).filter(ts => !isNaN(ts));
+			if (timestamps.length > 0) {
+				const minTs = Math.min(...timestamps);
+				const maxTs = Math.max(...timestamps);
+				messageDateRange = {
+					oldest: new Date(minTs).toISOString(),
+					newest: new Date(maxTs).toISOString(),
+					availableDates: [...new Set(timestamps.map(ts => new Date(ts).toISOString().split('T')[0]))].sort().slice(0, 10)
+				};
+			}
+		}
+
 		return Response.json({
 			experienceId,
 			totalMessages: allMessages.length,
@@ -165,6 +190,9 @@ export async function GET(request: NextRequest): Promise<Response> {
 					start: new Date(startTimestamp!).toISOString(),
 					end: new Date(endTimestamp!).toISOString(),
 				},
+			}),
+			...(messageDateRange && {
+				messageDateRange,
 			}),
 		});
 	} catch (error) {
