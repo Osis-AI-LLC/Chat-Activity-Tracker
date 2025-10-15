@@ -1,12 +1,91 @@
-import { whopSdk } from "@/lib/whop-sdk";
 import type { NextRequest } from "next/server";
+
+// Helper function to fetch a single page of messages using direct API
+async function fetchPageDirect(experienceId: string, cursor: string | null = null) {
+	const url = new URL("https://api.whop.com/v1/messages");
+	url.searchParams.set("limit", "100");
+	url.searchParams.set("channel_id", experienceId);
+	if (cursor) {
+		url.searchParams.set("after", cursor);
+	}
+
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${process.env.WHOP_API_KEY}`,
+			"Content-Type": "application/json",
+		},
+	});
+
+	if (!response.ok) {
+		const errorText = await response.text();
+		throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+	}
+
+	const data = await response.json();
+	return {
+		data: data.data || [],
+		page_info: data.page_info || { has_next_page: false, end_cursor: null }
+	};
+}
+
+// Helper function to fetch all messages with pagination
+async function fetchAllMessagesWithPagination(experienceId: string, startTimestamp?: number, endTimestamp?: number) {
+	const allMessages = [];
+	let cursor: string | null = null;
+	let pageCount = 0;
+	const maxPages = 500; // Support up to 50,000 messages (500 pages * 100 messages per page)
+
+	console.log(`Starting to fetch messages for experience: ${experienceId}`);
+
+	while (pageCount < maxPages) {
+		try {
+			const { data, page_info } = await fetchPageDirect(experienceId, cursor);
+			
+			if (data.length === 0) {
+				break;
+			}
+
+			pageCount++;
+			console.log(`Fetched page ${pageCount} with ${data.length} messages`);
+
+			// Filter messages by date if timestamps are provided
+			let filteredMessages = data;
+			if (startTimestamp !== undefined && endTimestamp !== undefined) {
+				filteredMessages = data.filter((message: any) => {
+					if (!message.createdAt) return false;
+					const messageTimestamp = Number(message.createdAt);
+					if (isNaN(messageTimestamp)) return false;
+					return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+				});
+			}
+
+			allMessages.push(...filteredMessages);
+
+			if (page_info.has_next_page && page_info.end_cursor) {
+				cursor = page_info.end_cursor;
+				// Add a small delay to avoid rate limiting
+				await new Promise(resolve => setTimeout(resolve, 200));
+			} else {
+				break;
+			}
+		} catch (error) {
+			console.error("Error fetching page:", error);
+			break;
+		}
+	}
+
+	if (pageCount >= maxPages) {
+		console.warn(`Reached maximum pages (${maxPages}). Some messages might be missing.`);
+	}
+
+	console.log(`Total messages fetched: ${allMessages.length}`);
+	return allMessages;
+}
 
 export async function GET(request: NextRequest): Promise<Response> {
 	try {
 		const searchParams = request.nextUrl.searchParams;
 		const experienceId = searchParams.get("experienceId");
-		const cursor = searchParams.get("cursor");
-		const limit = searchParams.get("limit") || "100";
 		const date = searchParams.get("date"); // Optional date filter in YYYY-MM-DD format
 
 		// Validate required parameters
@@ -18,8 +97,8 @@ export async function GET(request: NextRequest): Promise<Response> {
 		}
 
 		// Parse date filter if provided
-		let startTimestamp: number | null = null;
-		let endTimestamp: number | null = null;
+		let startTimestamp: number | undefined = undefined;
+		let endTimestamp: number | undefined = undefined;
 
 		if (date) {
 			const dateParts = date.split('-');
@@ -46,51 +125,16 @@ export async function GET(request: NextRequest): Promise<Response> {
 			endTimestamp = endOfDay.getTime();
 		}
 
-		// Fetch messages from the chat using Whop SDK
-		const result = await whopSdk.messages.listMessagesFromChat({
-			chatExperienceId: experienceId,
-		});
-
-		if (!result || !result.posts) {
-			return Response.json({
-				experienceId,
-				totalMessages: 0,
-				messages: [],
-				pageInfo: {
-					hasNextPage: false,
-					endCursor: null,
-				},
-			});
-		}
-
-		// Filter messages by date if date filter is provided
-		let filteredMessages = result.posts;
-		if (startTimestamp !== null && endTimestamp !== null) {
-			filteredMessages = result.posts.filter((post) => {
-				if ("createdAt" in post && post.createdAt) {
-					const messageTimestamp = Number(post.createdAt);
-					if (isNaN(messageTimestamp)) {
-						return false;
-					}
-					return messageTimestamp >= startTimestamp! && messageTimestamp <= endTimestamp!;
-				}
-				return false;
-			});
-		}
-
-		// For now, we'll return all messages since the Whop SDK doesn't support cursor-based pagination
-		// In a real implementation, you might need to implement your own pagination logic
-		const hasNextPage = result.posts.length === 50; // If we got exactly 50, there might be more
-		const lastPost = result.posts[result.posts.length - 1];
-		const endCursor = hasNextPage && lastPost && 'id' in lastPost ? lastPost.id : null;
+		// Fetch all messages with pagination
+		const allMessages = await fetchAllMessagesWithPagination(experienceId, startTimestamp, endTimestamp);
 
 		return Response.json({
 			experienceId,
-			totalMessages: filteredMessages.length,
-			messages: filteredMessages,
+			totalMessages: allMessages.length,
+			messages: allMessages,
 			pageInfo: {
-				hasNextPage,
-				endCursor,
+				hasNextPage: false,
+				endCursor: null,
 			},
 			...(date && {
 				dateRange: {

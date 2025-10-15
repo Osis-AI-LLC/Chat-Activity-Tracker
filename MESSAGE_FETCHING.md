@@ -69,8 +69,9 @@ This endpoint now includes pagination support to fetch all messages for a given 
 
 ### Pagination Support
 - Cursor-based pagination for fetching all messages
+- Support for up to 50,000 messages (500 pages * 100 messages per page)
 - Automatic retry logic with rate limiting protection
-- Maximum attempt limits to prevent infinite loops
+- Maximum page limits to prevent infinite loops
 
 ### Date Filtering
 - Filter messages by specific dates
@@ -119,11 +120,24 @@ const data = await response.json();
 console.log(`Fetched ${data.totalMessages} messages`);
 ```
 
+## Recent Improvements (2024)
+
+### Enhanced Pagination
+- **Increased Capacity**: Now supports fetching up to 50,000 messages (previously limited to ~500)
+- **Direct API Calls**: Replaced Whop SDK with direct API calls for better pagination control
+- **Improved Performance**: Better rate limiting and error handling
+- **Cursor-based Pagination**: Proper implementation using Whop API's cursor system
+
+### API Endpoint Updates
+- **Messages API**: Complete rewrite to use direct API calls with proper pagination
+- **Chat Activity API**: Updated to use the same improved pagination logic
+- **Better Error Handling**: More robust error handling and logging
+
 ## Performance Considerations
 
 - **Rate Limiting**: Built-in delays between requests to avoid API limits
 - **Memory Usage**: Messages are processed in batches to manage memory
-- **Timeout Protection**: Maximum attempt limits prevent infinite loops
+- **Timeout Protection**: Maximum page limits prevent infinite loops
 - **Error Recovery**: Graceful handling of network and API errors
 
 ## File Outputs

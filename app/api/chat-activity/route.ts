@@ -1,58 +1,84 @@
-import { whopSdk } from "@/lib/whop-sdk";
 import type { NextRequest } from "next/server";
+
+// Helper function to fetch a single page of messages using direct API
+async function fetchPageDirect(chatExperienceId: string, cursor: string | null = null) {
+	const url = new URL("https://api.whop.com/v1/messages");
+	url.searchParams.set("limit", "100");
+	url.searchParams.set("channel_id", chatExperienceId);
+	if (cursor) {
+		url.searchParams.set("after", cursor);
+	}
+
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${process.env.WHOP_API_KEY}`,
+			"Content-Type": "application/json",
+		},
+	});
+
+	if (!response.ok) {
+		const errorText = await response.text();
+		throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+	}
+
+	const data = await response.json();
+	return {
+		data: data.data || [],
+		page_info: data.page_info || { has_next_page: false, end_cursor: null }
+	};
+}
 
 // Helper function to fetch all messages with pagination support
 async function fetchAllMessagesWithPagination(chatExperienceId: string, startTimestamp: number, endTimestamp: number) {
 	const allMessages = [];
-	let hasMoreMessages = true;
-	let attempts = 0;
-	const maxAttempts = 10; // Prevent infinite loops
+	let cursor: string | null = null;
+	let pageCount = 0;
+	const maxPages = 500; // Support up to 50,000 messages (500 pages * 100 messages per page)
 
-	while (hasMoreMessages && attempts < maxAttempts) {
+	console.log(`Starting to fetch messages for experience: ${chatExperienceId}`);
+
+	while (pageCount < maxPages) {
 		try {
-			const result = await whopSdk.messages.listMessagesFromChat({
-				chatExperienceId,
-			});
-
-			if (!result || !result.posts || result.posts.length === 0) {
-				hasMoreMessages = false;
+			const { data, page_info } = await fetchPageDirect(chatExperienceId, cursor);
+			
+			if (data.length === 0) {
 				break;
 			}
 
+			pageCount++;
+			console.log(`Fetched page ${pageCount} with ${data.length} messages`);
+
 			// Filter messages by the specified date range
-			const filteredMessages = result.posts.filter((post) => {
-				if ("createdAt" in post && post.createdAt) {
-					const messageTimestamp = Number(post.createdAt);
-					if (isNaN(messageTimestamp)) {
-						console.warn("Invalid timestamp found:", post.createdAt);
-						return false;
-					}
-					return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+			const filteredMessages = data.filter((message: any) => {
+				if (!message.createdAt) return false;
+				const messageTimestamp = Number(message.createdAt);
+				if (isNaN(messageTimestamp)) {
+					console.warn("Invalid timestamp found:", message.createdAt);
+					return false;
 				}
-				return false;
+				return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
 			});
 
 			allMessages.push(...filteredMessages);
 
-			// If we got less than 50 messages, we've likely reached the end
-			// If we got exactly 50, there might be more messages
-			hasMoreMessages = result.posts.length === 50;
-			attempts++;
-
-			// Add a small delay to avoid rate limiting
-			if (hasMoreMessages) {
-				await new Promise(resolve => setTimeout(resolve, 100));
+			if (page_info.has_next_page && page_info.end_cursor) {
+				cursor = page_info.end_cursor;
+				// Add a small delay to avoid rate limiting
+				await new Promise(resolve => setTimeout(resolve, 200));
+			} else {
+				break;
 			}
 		} catch (error) {
-			console.error("Error fetching messages in pagination:", error);
-			hasMoreMessages = false;
+			console.error("Error fetching page:", error);
+			break;
 		}
 	}
 
-	if (attempts >= maxAttempts) {
-		console.warn(`Reached maximum attempts (${maxAttempts}) for fetching messages. Some messages might be missing.`);
+	if (pageCount >= maxPages) {
+		console.warn(`Reached maximum pages (${maxPages}). Some messages might be missing.`);
 	}
 
+	console.log(`Total messages fetched: ${allMessages.length}`);
 	return allMessages;
 }
 
