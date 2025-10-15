@@ -58,7 +58,19 @@ async function fetchPageDirect(experienceId: string, cursor: string | null = nul
 				createdAtValue: firstMsg.createdAt,
 				createdAtParsed,
 				hasContent: !!firstMsg.content,
-				hasAuthor: !!firstMsg.author
+				hasAuthor: !!firstMsg.author,
+				// Show all available fields to find the actual date field
+				allFields: Object.keys(firstMsg),
+				// Show a few key fields that might contain dates
+				possibleDateFields: {
+					created_at: firstMsg.created_at,
+					createdAt: firstMsg.createdAt,
+					date: firstMsg.date,
+					timestamp: firstMsg.timestamp,
+					time: firstMsg.time,
+					posted_at: firstMsg.posted_at,
+					postedAt: firstMsg.postedAt
+				}
 			}
 		});
 	}
