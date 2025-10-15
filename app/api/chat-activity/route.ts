@@ -1,6 +1,61 @@
 import { whopSdk } from "@/lib/whop-sdk";
 import type { NextRequest } from "next/server";
 
+// Helper function to fetch all messages with pagination support
+async function fetchAllMessagesWithPagination(chatExperienceId: string, startTimestamp: number, endTimestamp: number) {
+	const allMessages = [];
+	let hasMoreMessages = true;
+	let attempts = 0;
+	const maxAttempts = 10; // Prevent infinite loops
+
+	while (hasMoreMessages && attempts < maxAttempts) {
+		try {
+			const result = await whopSdk.messages.listMessagesFromChat({
+				chatExperienceId,
+			});
+
+			if (!result || !result.posts || result.posts.length === 0) {
+				hasMoreMessages = false;
+				break;
+			}
+
+			// Filter messages by the specified date range
+			const filteredMessages = result.posts.filter((post) => {
+				if ("createdAt" in post && post.createdAt) {
+					const messageTimestamp = Number(post.createdAt);
+					if (isNaN(messageTimestamp)) {
+						console.warn("Invalid timestamp found:", post.createdAt);
+						return false;
+					}
+					return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+				}
+				return false;
+			});
+
+			allMessages.push(...filteredMessages);
+
+			// If we got less than 50 messages, we've likely reached the end
+			// If we got exactly 50, there might be more messages
+			hasMoreMessages = result.posts.length === 50;
+			attempts++;
+
+			// Add a small delay to avoid rate limiting
+			if (hasMoreMessages) {
+				await new Promise(resolve => setTimeout(resolve, 100));
+			}
+		} catch (error) {
+			console.error("Error fetching messages in pagination:", error);
+			hasMoreMessages = false;
+		}
+	}
+
+	if (attempts >= maxAttempts) {
+		console.warn(`Reached maximum attempts (${maxAttempts}) for fetching messages. Some messages might be missing.`);
+	}
+
+	return allMessages;
+}
+
 export async function GET(request: NextRequest): Promise<Response> {
 	try {
 		const searchParams = request.nextUrl.searchParams;
@@ -47,59 +102,19 @@ export async function GET(request: NextRequest): Promise<Response> {
 		const startTimestamp = startOfDay.getTime();
 		const endTimestamp = endOfDay.getTime();
 
-	// Fetch messages from the chat using Whop SDK
-	// Note: The API doesn't support pagination, but we can work around the 50-message limit
-	// by making multiple calls if needed and filtering by date range
-	const result = await whopSdk.messages.listMessagesFromChat({
-		chatExperienceId,
-	});
-
-	if (!result || !result.posts) {
-		return Response.json({
-			chatExperienceId,
-			date,
-			totalMessages: 0,
-			messages: [],
-			dateRange: {
-				start: startOfDay.toISOString(),
-				end: endOfDay.toISOString(),
-			},
-		});
-	}
-
-	// Filter messages by the specified date
-	const filteredMessages = result.posts.filter((post) => {
-		// Type guard to ensure post has createdAt property
-		if ("createdAt" in post && post.createdAt) {
-			const messageTimestamp = Number(post.createdAt);
-			// Validate that the timestamp is a valid number
-			if (isNaN(messageTimestamp)) {
-				console.warn("Invalid timestamp found:", post.createdAt);
-				return false;
-			}
-			return (
-				messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp
-			);
-		}
-		return false;
-	});
+	// Fetch messages from the chat using Whop SDK with pagination support
+	const allMessages = await fetchAllMessagesWithPagination(chatExperienceId, startTimestamp, endTimestamp);
 
 	// Log information about the API response for debugging
-	console.log(`Total messages returned by API: ${result.posts.length}`);
-	console.log(`Messages filtered for date ${date}: ${filteredMessages.length}`);
-	
-	// If we got exactly 50 messages and some might be from the requested date,
-	// this could indicate we're hitting a limit. Log a warning.
-	if (result.posts.length === 50) {
-		console.warn(`API returned exactly 50 messages. This might indicate a pagination limit. Consider implementing date-range based fetching if messages are missing.`);
-	}
+	console.log(`Total messages fetched: ${allMessages.length}`);
+	console.log(`Messages filtered for date ${date}: ${allMessages.length}`);
 
 		// Return the activity data
 		return Response.json({
 			chatExperienceId,
 			date,
-			totalMessages: filteredMessages.length,
-			messages: filteredMessages,
+			totalMessages: allMessages.length,
+			messages: allMessages,
 			dateRange: {
 				start: startOfDay.toISOString(),
 				end: endOfDay.toISOString(),
