@@ -81,7 +81,8 @@ export async function GET(request: NextRequest): Promise<Response> {
 		// For now, we'll return all messages since the Whop SDK doesn't support cursor-based pagination
 		// In a real implementation, you might need to implement your own pagination logic
 		const hasNextPage = result.posts.length === 50; // If we got exactly 50, there might be more
-		const endCursor = hasNextPage ? result.posts[result.posts.length - 1]?.id || null : null;
+		const lastPost = result.posts[result.posts.length - 1];
+		const endCursor = hasNextPage && lastPost && 'id' in lastPost ? lastPost.id : null;
 
 		return Response.json({
 			experienceId,
