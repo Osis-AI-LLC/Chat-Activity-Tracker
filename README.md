@@ -35,3 +35,17 @@ a
 
 
 For more info, see our docs at https://dev.whop.com/introduction
+
+## Darcy AI Timeline Estimation
+
+This project includes configuration for Darcy AI timeline estimation. See [DARCY_AI_GUIDELINES.md](./DARCY_AI_GUIDELINES.md) for detailed information on:
+
+- Minimum timeline requirements (never under 1 week)
+- Integration complexity factors (brokerages, sports betting apps, airlines)
+- Cost estimation guidelines
+- Real-world examples
+
+**Quick Reference**:
+- Minimum timeline: 7 days
+- High complexity integrations (brokerages, betting, airlines): +21 days minimum
+- Configuration file: `darcy-ai-config.json`
