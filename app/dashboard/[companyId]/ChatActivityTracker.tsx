@@ -501,19 +501,7 @@ export default function ChatActivityTracker({
 															)}
 														</div>
 													</div>
-													<Text size="1" color="gray">
-														{(() => {
-															try {
-																const timestamp = Number(msg.createdAt);
-																if (isNaN(timestamp)) {
-																	return "Invalid date";
-																}
-																return new Date(timestamp).toLocaleString();
-															} catch (error) {
-																return "Invalid date";
-															}
-														})()}
-													</Text>
+													
 												</div>
 												<Text size="2" className="mb-2">
 													{msg.content || "(No text content)"}
