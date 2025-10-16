@@ -39,9 +39,14 @@ async function fetchPageDirect(experienceId: string, cursor: string | null = nul
 		const firstMsg = data.data[0];
 		let createdAtParsed = 'Invalid date';
 		try {
-			const timestamp = Number(firstMsg.createdAt);
-			if (!isNaN(timestamp)) {
-				const date = new Date(timestamp);
+			const timestamp = firstMsg.createdAt || firstMsg.created_at;
+			if (timestamp) {
+				let date: Date;
+				if (typeof timestamp === 'string') {
+					date = new Date(timestamp);
+				} else {
+					date = new Date(Number(timestamp));
+				}
 				if (!isNaN(date.getTime())) {
 					createdAtParsed = date.toISOString();
 				}
@@ -57,6 +62,9 @@ async function fetchPageDirect(experienceId: string, cursor: string | null = nul
 				createdAtType: typeof firstMsg.createdAt,
 				createdAtValue: firstMsg.createdAt,
 				createdAtParsed,
+				// Show the actual timestamp field that works
+				actualTimestamp: firstMsg.created_at,
+				actualTimestampType: typeof firstMsg.created_at,
 				hasContent: !!firstMsg.content,
 				hasAuthor: !!firstMsg.author,
 				// Show all available fields to find the actual date field
@@ -103,7 +111,15 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 			
 			// Show date range for this page to help debug
 			if (data.length > 0) {
-				const timestamps = data.map((msg: any) => Number(msg.createdAt)).filter((ts: number) => !isNaN(ts));
+				const timestamps = data.map((msg: any) => {
+					const timestamp = msg.createdAt || msg.created_at;
+					if (!timestamp) return NaN;
+					if (typeof timestamp === 'string') {
+						return new Date(timestamp).getTime();
+					}
+					return Number(timestamp);
+				}).filter((ts: number) => !isNaN(ts));
+				
 				if (timestamps.length > 0) {
 					const minTs = Math.min(...timestamps);
 					const maxTs = Math.max(...timestamps);
@@ -116,8 +132,15 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 			if (startTimestamp !== undefined && endTimestamp !== undefined) {
  				// If the entire page is older than the requested start date, we can stop
  				const pageTimestamps = data
- 					.map((message: any) => Number(message?.createdAt))
- 					.filter((n: number) => !Number.isNaN(n));
+ 					.map((message: any) => {
+						const timestamp = message.createdAt || message.created_at;
+						if (!timestamp) return NaN;
+						if (typeof timestamp === 'string') {
+							return new Date(timestamp).getTime();
+						}
+						return Number(timestamp);
+					})
+					.filter((n: number) => !Number.isNaN(n));
  				if (pageTimestamps.length > 0) {
  					const pageMaxTs = Math.max(...pageTimestamps); // newest in page
  					if (pageMaxTs < startTimestamp) {
@@ -126,8 +149,18 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
  				}
 
 				filteredMessages = data.filter((message: any) => {
-					if (!message.createdAt) return false;
-					const messageTimestamp = Number(message.createdAt);
+					// Try both createdAt and created_at fields
+					const timestamp = message.createdAt || message.created_at;
+					if (!timestamp) return false;
+					
+					// Handle both string and number timestamps
+					let messageTimestamp: number;
+					if (typeof timestamp === 'string') {
+						messageTimestamp = new Date(timestamp).getTime();
+					} else {
+						messageTimestamp = Number(timestamp);
+					}
+					
 					if (isNaN(messageTimestamp)) return false;
 					const isInRange = messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
 					
@@ -218,7 +251,15 @@ export async function GET(request: NextRequest): Promise<Response> {
 		// If no date filter, show the actual date range of messages
 		let messageDateRange = null;
 		if (!date && allMessages.length > 0) {
-			const timestamps = allMessages.map((msg: any) => Number(msg.createdAt)).filter((ts: number) => !isNaN(ts));
+			const timestamps = allMessages.map((msg: any) => {
+				const timestamp = msg.createdAt || msg.created_at;
+				if (!timestamp) return NaN;
+				if (typeof timestamp === 'string') {
+					return new Date(timestamp).getTime();
+				}
+				return Number(timestamp);
+			}).filter((ts: number) => !isNaN(ts));
+			
 			if (timestamps.length > 0) {
 				const minTs = Math.min(...timestamps);
 				const maxTs = Math.max(...timestamps);
