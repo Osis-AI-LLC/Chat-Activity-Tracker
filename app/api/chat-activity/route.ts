@@ -23,56 +23,10 @@ async function fetchPageDirect(chatExperienceId: string, cursor: string | null =
 
 	const data = await response.json();
 	
-	// Log raw API response for debugging
-	console.log(`🔍 Raw API response for page ${cursor ? 'with cursor' : 'first'}:`);
-	console.log(`📊 Response structure:`, {
-		hasData: !!data.data,
-		dataLength: data.data?.length || 0,
-		hasPageInfo: !!data.page_info,
-		pageInfo: data.page_info,
-		hasNextPage: data.page_info?.has_next_page,
-		endCursor: data.page_info?.end_cursor
-	});
-	
-	// Log sample message structure if we have data
+	// Log simple message info
 	if (data.data && data.data.length > 0) {
 		const firstMsg = data.data[0];
-		let createdAtParsed = 'Invalid date';
-		try {
-			const timestamp = Number(firstMsg.createdAt);
-			if (!isNaN(timestamp)) {
-				const date = new Date(timestamp);
-				if (!isNaN(date.getTime())) {
-					createdAtParsed = date.toISOString();
-				}
-			}
-		} catch (error) {
-			createdAtParsed = `Error parsing: ${error}`;
-		}
-		
-		console.log(`📝 Sample message structure:`, {
-			firstMessage: {
-				id: firstMsg.id,
-				createdAt: firstMsg.createdAt,
-				createdAtType: typeof firstMsg.createdAt,
-				createdAtValue: firstMsg.createdAt,
-				createdAtParsed,
-				hasContent: !!firstMsg.content,
-				hasAuthor: !!firstMsg.author,
-				// Show all available fields to find the actual date field
-				allFields: Object.keys(firstMsg),
-				// Show a few key fields that might contain dates
-				possibleDateFields: {
-					created_at: firstMsg.created_at,
-					createdAt: firstMsg.createdAt,
-					date: firstMsg.date,
-					timestamp: firstMsg.timestamp,
-					time: firstMsg.time,
-					posted_at: firstMsg.posted_at,
-					postedAt: firstMsg.postedAt
-				}
-			}
-		});
+		console.log(`📝 Message: ${firstMsg.content || 'No content'} | Created: ${firstMsg.created_at} | Sender: ${firstMsg.user?.username || 'Unknown'}`);
 	}
 	
 	return {
@@ -114,22 +68,19 @@ async function fetchAllMessagesWithPagination(chatExperienceId: string, startTim
 			}
 
 			const filteredMessages = data.filter((message: any) => {
-				if (!message.createdAt) return false;
-				const messageTimestamp = Number(message.createdAt);
-				if (isNaN(messageTimestamp)) {
-					console.warn("Invalid timestamp found:", message.createdAt);
-					return false;
-				}
-				const isInRange = messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
+				// Use created_at field directly
+				if (!message.created_at) return false;
 				
-				if (isInRange) {
-					console.log(`✅ Found matching message: ${new Date(messageTimestamp).toISOString()}`);
-				}
+				// Convert to timestamp and check range
+				const messageTimestamp = new Date(message.created_at).getTime();
+				if (isNaN(messageTimestamp)) return false;
 				
-				return isInRange;
+				return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
 			});
 			
-			console.log(`📊 Page ${pageCount}: Filtered ${filteredMessages.length} messages from ${data.length} total`);
+			if (filteredMessages.length > 0) {
+				console.log(`✅ Found ${filteredMessages.length} messages for target date`);
+			}
 
 			allMessages.push(...filteredMessages);
 
