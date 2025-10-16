@@ -144,7 +144,13 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 					.filter((n: number) => !Number.isNaN(n));
  				if (pageTimestamps.length > 0) {
  					const pageMaxTs = Math.max(...pageTimestamps); // newest in page
+ 					const pageMinTs = Math.min(...pageTimestamps); // oldest in page
+ 					console.log(`🔍 Page ${pageCount} timestamp range: ${new Date(pageMinTs).toISOString()} to ${new Date(pageMaxTs).toISOString()}`);
+ 					console.log(`🔍 Target range: ${new Date(startTimestamp).toISOString()} to ${new Date(endTimestamp).toISOString()}`);
+ 					console.log(`🔍 Page max (${new Date(pageMaxTs).toISOString()}) < start (${new Date(startTimestamp).toISOString()}): ${pageMaxTs < startTimestamp}`);
+ 					
  					if (pageMaxTs < startTimestamp) {
+ 						console.log(`⏭️  Skipping page ${pageCount} - all messages are older than target date`);
  						break;
  					}
  				}
