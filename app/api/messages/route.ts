@@ -112,14 +112,9 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 			
 			// Show date range for this page to help debug
 			if (data.length > 0) {
-				const timestamps = data.map((msg: any) => {
-					const timestamp = msg.createdAt || msg.created_at;
-					if (!timestamp) return NaN;
-					if (typeof timestamp === 'string') {
-						return new Date(timestamp).getTime();
-					}
-					return Number(timestamp);
-				}).filter((ts: number) => !isNaN(ts));
+				const timestamps = data
+					.map((msg: any) => msg.created_at ? new Date(msg.created_at).getTime() : NaN)
+					.filter((ts: number) => !isNaN(ts));
 				
 				if (timestamps.length > 0) {
 					const minTs = Math.min(...timestamps);
@@ -128,68 +123,18 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 				}
 			}
 
-			// Filter messages by date if timestamps are provided
+			// Simple date filtering - just filter by created_at field
 			let filteredMessages = data;
 			if (startTimestamp !== undefined && endTimestamp !== undefined) {
- 				// If the entire page is older than the requested start date, we can stop
- 				const pageTimestamps = data
- 					.map((message: any) => {
-						const timestamp = message.createdAt || message.created_at;
-						if (!timestamp) return NaN;
-						if (typeof timestamp === 'string') {
-							return new Date(timestamp).getTime();
-						}
-						return Number(timestamp);
-					})
-					.filter((n: number) => !Number.isNaN(n));
- 				if (pageTimestamps.length > 0) {
- 					const pageMaxTs = Math.max(...pageTimestamps); // newest in page
- 					const pageMinTs = Math.min(...pageTimestamps); // oldest in page
- 					console.log(`🔍 Page ${pageCount} timestamp range: ${new Date(pageMinTs).toISOString()} to ${new Date(pageMaxTs).toISOString()}`);
- 					console.log(`🔍 Target range: ${new Date(startTimestamp).toISOString()} to ${new Date(endTimestamp).toISOString()}`);
- 					console.log(`🔍 Page max (${new Date(pageMaxTs).toISOString()}) < start (${new Date(startTimestamp).toISOString()}): ${pageMaxTs < startTimestamp}`);
- 					
- 					if (pageMaxTs < startTimestamp) {
- 						console.log(`⏭️  Skipping page ${pageCount} - all messages are older than target date`);
- 						break;
- 					}
- 				}
-
 				filteredMessages = data.filter((message: any) => {
-					// Try both createdAt and created_at fields
-					const timestamp = message.createdAt || message.created_at;
-					if (!timestamp) {
-						console.log(`❌ Message ${message.id} has no timestamp`);
-						return false;
-					}
+					// Use created_at field directly
+					if (!message.created_at) return false;
 					
-					// Handle both string and number timestamps
-					let messageTimestamp: number;
-					if (typeof timestamp === 'string') {
-						messageTimestamp = new Date(timestamp).getTime();
-					} else {
-						messageTimestamp = Number(timestamp);
-					}
+					// Convert to timestamp and check range
+					const messageTimestamp = new Date(message.created_at).getTime();
+					if (isNaN(messageTimestamp)) return false;
 					
-					if (isNaN(messageTimestamp)) {
-						console.log(`❌ Message ${message.id} has invalid timestamp: ${timestamp}`);
-						return false;
-					}
-					
-					const messageDate = new Date(messageTimestamp);
-					const isInRange = messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
-					
-					// Debug logging for first few messages
-					if (data.indexOf(message) < 3) {
-						console.log(`🔍 Message ${message.id}: ${messageDate.toISOString()} - In range: ${isInRange}`);
-						console.log(`   Target range: ${new Date(startTimestamp).toISOString()} to ${new Date(endTimestamp).toISOString()}`);
-					}
-					
-					if (isInRange) {
-						console.log(`✅ Found matching message: ${messageDate.toISOString()}`);
-					}
-					
-					return isInRange;
+					return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
 				});
 				
 				console.log(`📊 Page ${pageCount}: Filtered ${filteredMessages.length} messages from ${data.length} total`);
@@ -272,14 +217,9 @@ export async function GET(request: NextRequest): Promise<Response> {
 		// If no date filter, show the actual date range of messages
 		let messageDateRange = null;
 		if (!date && allMessages.length > 0) {
-			const timestamps = allMessages.map((msg: any) => {
-				const timestamp = msg.createdAt || msg.created_at;
-				if (!timestamp) return NaN;
-				if (typeof timestamp === 'string') {
-					return new Date(timestamp).getTime();
-				}
-				return Number(timestamp);
-			}).filter((ts: number) => !isNaN(ts));
+			const timestamps = allMessages
+				.map((msg: any) => msg.created_at ? new Date(msg.created_at).getTime() : NaN)
+				.filter((ts: number) => !isNaN(ts));
 			
 			if (timestamps.length > 0) {
 				const minTs = Math.min(...timestamps);
