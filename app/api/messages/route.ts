@@ -23,65 +23,10 @@ async function fetchPageDirect(experienceId: string, cursor: string | null = nul
 
 	const data = await response.json();
 	
-	// Log raw API response for debugging
-	console.log(`🔍 Raw API response for page ${cursor ? 'with cursor' : 'first'}:`);
-	console.log(`📊 Response structure:`, {
-		hasData: !!data.data,
-		dataLength: data.data?.length || 0,
-		hasPageInfo: !!data.page_info,
-		pageInfo: data.page_info,
-		hasNextPage: data.page_info?.has_next_page,
-		endCursor: data.page_info?.end_cursor
-	});
-	
-	// Log sample message structure if we have data
+	// Log simple message info
 	if (data.data && data.data.length > 0) {
 		const firstMsg = data.data[0];
-		let createdAtParsed = 'Invalid date';
-		try {
-			const timestamp = firstMsg.createdAt || firstMsg.created_at;
-			if (timestamp) {
-				let date: Date;
-				if (typeof timestamp === 'string') {
-					date = new Date(timestamp);
-				} else {
-					date = new Date(Number(timestamp));
-				}
-				if (!isNaN(date.getTime())) {
-					createdAtParsed = date.toISOString();
-				}
-			}
-		} catch (error) {
-			createdAtParsed = `Error parsing: ${error}`;
-		}
-		
-		console.log(`📝 Sample message structure:`, {
-			firstMessage: {
-				id: firstMsg.id,
-				createdAt: firstMsg.createdAt,
-				createdAtType: typeof firstMsg.createdAt,
-				createdAtValue: firstMsg.createdAt,
-				createdAtParsed,
-				// Show the actual timestamp field that works
-				actualTimestamp: firstMsg.created_at,
-				actualTimestampType: typeof firstMsg.created_at,
-				actualTimestampParsed: firstMsg.created_at ? new Date(firstMsg.created_at).toISOString() : 'No timestamp',
-				hasContent: !!firstMsg.content,
-				hasAuthor: !!firstMsg.author,
-				// Show all available fields to find the actual date field
-				allFields: Object.keys(firstMsg),
-				// Show a few key fields that might contain dates
-				possibleDateFields: {
-					created_at: firstMsg.created_at,
-					createdAt: firstMsg.createdAt,
-					date: firstMsg.date,
-					timestamp: firstMsg.timestamp,
-					time: firstMsg.time,
-					posted_at: firstMsg.posted_at,
-					postedAt: firstMsg.postedAt
-				}
-			}
-		});
+		console.log(`📝 Message: ${firstMsg.content || 'No content'} | Created: ${firstMsg.created_at} | Sender: ${firstMsg.user?.username || 'Unknown'}`);
 	}
 	
 	return {
@@ -109,19 +54,6 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 
 			pageCount++;
 			console.log(`Fetched page ${pageCount} with ${data.length} messages`);
-			
-			// Show date range for this page to help debug
-			if (data.length > 0) {
-				const timestamps = data
-					.map((msg: any) => msg.created_at ? new Date(msg.created_at).getTime() : NaN)
-					.filter((ts: number) => !isNaN(ts));
-				
-				if (timestamps.length > 0) {
-					const minTs = Math.min(...timestamps);
-					const maxTs = Math.max(...timestamps);
-					console.log(`  📅 Page date range: ${new Date(minTs).toISOString()} to ${new Date(maxTs).toISOString()}`);
-				}
-			}
 
 			// Simple date filtering - just filter by created_at field
 			let filteredMessages = data;
@@ -137,7 +69,9 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 					return messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
 				});
 				
-				console.log(`📊 Page ${pageCount}: Filtered ${filteredMessages.length} messages from ${data.length} total`);
+				if (filteredMessages.length > 0) {
+					console.log(`✅ Found ${filteredMessages.length} messages for target date`);
+				}
 			}
 
 			allMessages.push(...filteredMessages);
