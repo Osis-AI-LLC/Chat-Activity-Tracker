@@ -65,6 +65,7 @@ async function fetchPageDirect(experienceId: string, cursor: string | null = nul
 				// Show the actual timestamp field that works
 				actualTimestamp: firstMsg.created_at,
 				actualTimestampType: typeof firstMsg.created_at,
+				actualTimestampParsed: firstMsg.created_at ? new Date(firstMsg.created_at).toISOString() : 'No timestamp',
 				hasContent: !!firstMsg.content,
 				hasAuthor: !!firstMsg.author,
 				// Show all available fields to find the actual date field
@@ -151,7 +152,10 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 				filteredMessages = data.filter((message: any) => {
 					// Try both createdAt and created_at fields
 					const timestamp = message.createdAt || message.created_at;
-					if (!timestamp) return false;
+					if (!timestamp) {
+						console.log(`❌ Message ${message.id} has no timestamp`);
+						return false;
+					}
 					
 					// Handle both string and number timestamps
 					let messageTimestamp: number;
@@ -161,11 +165,22 @@ async function fetchAllMessagesWithPagination(experienceId: string, startTimesta
 						messageTimestamp = Number(timestamp);
 					}
 					
-					if (isNaN(messageTimestamp)) return false;
+					if (isNaN(messageTimestamp)) {
+						console.log(`❌ Message ${message.id} has invalid timestamp: ${timestamp}`);
+						return false;
+					}
+					
+					const messageDate = new Date(messageTimestamp);
 					const isInRange = messageTimestamp >= startTimestamp && messageTimestamp <= endTimestamp;
 					
+					// Debug logging for first few messages
+					if (data.indexOf(message) < 3) {
+						console.log(`🔍 Message ${message.id}: ${messageDate.toISOString()} - In range: ${isInRange}`);
+						console.log(`   Target range: ${new Date(startTimestamp).toISOString()} to ${new Date(endTimestamp).toISOString()}`);
+					}
+					
 					if (isInRange) {
-						console.log(`✅ Found matching message: ${new Date(messageTimestamp).toISOString()}`);
+						console.log(`✅ Found matching message: ${messageDate.toISOString()}`);
 					}
 					
 					return isInRange;
