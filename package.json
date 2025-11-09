@@ -1,9 +1,11 @@
 {
-	"name": "whop-nextjs-app-template",
+	"name": "chat-activity-tracker",
+	"description": "Self-hostable dashboard for inspecting Whop chat activity",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
 		"dev": "whop-proxy --command 'next dev --turbopack'",
+		"dev:local": "next dev",
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint"
